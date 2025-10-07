@@ -14,7 +14,7 @@ export default function Register() {
 
   async function onSubmit(e){
     e.preventDefault(); setErr('');
-    try { await register({ name, email, password, role }); nav('/dashboard'); }
+    try { await register({ name, address, email, password, role }); nav('/dashboard'); }
     catch(ex){ setErr(ex.message); }
   }
 
