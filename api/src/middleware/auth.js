@@ -14,7 +14,7 @@ export async function requireAuth(req, res, next) {
     const user = await User.findById(payload.sub).lean();
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
-    req.user = { id: user._id.toString(), role: user.role, name: user.name, email: user.email };
+    req.user = { id: user._id.toString(), role: user.role, name: user.name, address: user.address, email: user.email };
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Unauthorized' });

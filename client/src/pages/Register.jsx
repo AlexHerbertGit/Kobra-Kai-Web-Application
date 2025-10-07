@@ -7,6 +7,7 @@ export default function Register() {
   const nav = useNavigate();
   const [role, setRole] = useState('beneficiary');
   const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
@@ -29,6 +30,8 @@ export default function Register() {
         </select>
         <label>Name</label>
         <input className="input" value={name} onChange={e=>setName(e.target.value)} required/>
+        <label>Address</label>
+        <input className="input" value={address} onChange={e=>setAddress(e.target.value)} required/>
         <label>Email</label>
         <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
         <label>Password</label>
