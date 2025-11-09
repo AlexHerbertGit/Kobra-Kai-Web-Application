@@ -48,10 +48,11 @@ a {
 /* Nav base */
 .nav { background: var(--clr-nav-bg); color: var(--clr-nav-link); }
 .nav a { color: var(--clr-nav-link); }
-.nav__inner { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; }
+.nav__inner { display:flex; align-items:center; justify-content: space-between; padding: 1rem 1rem; }
 .nav__brand { font-weight:800; }
 
 /* Desktop menu layout */
+.nav__menu { display:flex; align-items:center;  gap:1rem; }
 .nav__menu { display:flex; align-items:center; gap:1rem; max-width:100%; }
 .nav__links { display:flex; align-items:center; gap:1rem; }
 .nav__auth { display:flex; align-items:center; gap:.75rem; }
@@ -154,21 +155,17 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;            
+    padding: 1rem;  
+    margin: 1rem;          
 }
 
 .hero-card {
   max-width: 100%;
+  padding: 1rem;
   text-align: center;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  /* Solid surface or glassy look — pick ONE: */
-
-  /* Option A: solid surface (safe & legible) 
-  background: #dbf0e9;
-  border: none;
-*/
-  /* Option B: frosted glass over image */
+  /* Solid surface or glassy look */
   background: rgba(255,255,255,0.8);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.6);
@@ -177,10 +174,10 @@ a {
 
 .hero-card h1 {
     font-size: 60px;
-  margin-top: 0.25rem;
-  margin-bottom: 0.5rem;
-  font-family: var(--font-heading);
-  color: #dbf0e9;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+    color: #dbf0e9;
 }
 
 .hero-card h2 {
