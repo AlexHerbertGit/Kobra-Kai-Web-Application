@@ -21,7 +21,8 @@
     box-sizing: border-box; 
 }
 
-body { 
+body {
+    max-width: 100%; 
     margin: 0; 
     font-family: var(--font-body);
     background: var(--clr-bg);
@@ -51,7 +52,7 @@ a {
 .nav__brand { font-weight:800; }
 
 /* Desktop menu layout */
-.nav__menu { display:flex; align-items:center; gap:1rem; }
+.nav__menu { display:flex; align-items:center; gap:1rem; max-width:100%; }
 .nav__links { display:flex; align-items:center; gap:1rem; }
 .nav__auth { display:flex; align-items:center; gap:.75rem; }
 .nav a.active { color: var(--clr-nav-link-hover); }
@@ -210,7 +211,7 @@ a {
 }
 
 .bio-card {
-    background-color: #e9e6da;
+    background-color: #edeff1;
     margin-top: 0.25rem;
     margin-bottom: 0.5rem;
     font-family: var(--font-heading);
@@ -222,7 +223,7 @@ a {
 /* WHAT WE DO SECTION */
 .whatwedo {
   position: relative;
-  width: 950%;
+  max-width: 100%;
   padding: clamp(2rem, 4vw, 3.5rem) 0;
   background: url('/fern-img.jpg') center/cover no-repeat fixed;
   /* full-bleed if your page uses .container elsewhere */
