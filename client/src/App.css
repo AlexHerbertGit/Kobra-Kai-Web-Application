@@ -218,93 +218,103 @@ a {
 }
 
 /* WHAT WE DO SECTION */
-.whatwedo {
+.feature-section {
   position: relative;
-  max-width: 100%;
-  padding: clamp(2rem, 4vw, 3.5rem) 0;
-  background: url('/fern-img.jpg') center/cover no-repeat fixed;
-  /* full-bleed if your page uses .container elsewhere */
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  background: url('/fern-img.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   width: 100vw;
 }
 
-.whatwedo__overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(
-    0deg,
-    rgba(132, 226, 89, 0.45) 0%,
-    rgba(187, 248, 163, 0.35) 100%
+.feature-section__overlay {
+  position: absolute;
+  inset: 0;
+  background: var(
+    --feature-section-overlay,
+    linear-gradient(
+      0deg,
+      rgba(132, 226, 89, 0.45) 0%,
+      rgba(187, 248, 163, 0.35) 100%
+    )
   );
   backdrop-filter: blur(3px);
 }
 
-.whatwedo__inner {
-  position: relative; /* sit above overlay */
+.feature-section__inner {
+  position: relative;
   z-index: 1;
   text-align: center;
   color: #fff;
 }
 
-.whatwedo__title {
+.feature-section__title {
   font-family: var(--font-heading);
   font-size: clamp(1.8rem, 3.6vw, 3rem);
   margin: 0 0 .25rem;
   color: var(--clr-bg);
 }
 
-.whatwedo__tagline {
+.feature-section__tagline {
   opacity: .9;
   margin: 0 0 1.5rem;
   font-style: italic;
 }
 
-.whatwedo__grid {
+.feature-section__grid {
   margin-top: 1rem;
   display: grid;
   gap: 1.25rem;
   padding: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-@media (max-width: 780px) {
-  .whatwedo__grid { grid-template-columns: 1fr; }
+   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 /* CARD */
-.wwd-card {
+.feature-card {
   background: var(--clr-surface);
   border: none;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
   text-align: center;
+  max-width: 90%;
 }
 
-.wwd-card__img {
+.feature-card__img {
   width: 100%;
   height: 180px;
   object-fit: cover;
   display: block;
 }
 
-.wwd-card__body {
+.feature-card__body {
   padding: 1rem;
   color: var(--clr-text);
 }
 
-.wwd-card__title {
+.feature-card__title {
   font-family: var(--font-heading);
   font-size: 1.15rem;
   margin: .25rem 0 .4rem;
 }
 
-.wwd-card__text {
+.feature-card__text {
   color: var(--clr-text-muted);
   line-height: 1.5;
   margin-bottom: .9rem;
 }
+
+.feature-card__meta {
+  margin-top: .75rem;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.feature-section--alt .feature-section__title {
+  color: #fff;
+}
+
 
 /* Button variant (green like your mock) */
 .btn--primary {
