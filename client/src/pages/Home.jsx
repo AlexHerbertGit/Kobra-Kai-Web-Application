@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 export default function Home() {
   return (
     <div>
+      <div className="container">
       <section className="landing-header">
         <img
           src="/hero.jpg"
@@ -27,6 +28,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
+    
 
       <section className="home-bio">
         <div className="bio-card">
@@ -94,7 +97,113 @@ export default function Home() {
         </div>
       </section>
 
-      
+      {/* Testimonials Section */}
+      <section className="feature-section-2">
+        <div className="feature-section__overlay-2" />
+
+        <div className="feature-section__inner container">
+          <h2 className="feature-section__title-2">Testimonials</h2>
+          <p className="feature-section__tagline-2">
+            Don't just take our word for it, here is what the community has to say!
+          </p>
+
+          <div className="feature-section__grid">
+            {/* Card 1 */}
+            <article className="feature-card">
+              <img src="/ocean-food.jpg" alt="Community support" className="feature-card__img" />
+              <div className="feature-card__body">
+                <h3 className="feature-card__title">Aroha</h3>
+                <p className="feature-card__text">
+                  <i>
+                  "I was really struggling after loosing my job, I have two children I need to provide for and Kobra Kai really helped take the pressure off while I was looking for work.
+                  I loved how easy it was to order meals from the website, and the food was amazing!"
+                  </i>
+                </p>
+              </div>
+            </article>
+
+            {/* Card 2 */}
+            <article className="feature-card">
+              <img src="/helping.jpg" alt="Meal delivery" className="feature-card__img" />
+              <div className="feature-card__body">
+                <h3 className="feature-card__title">Jackson</h3>
+                <p className="feature-card__text">
+                  <i> "I was made redundant from my job and I have and wife and two kids to feed, Kobra Kai really helped us out when we needed it the most! 
+                    Being able to order meals online straight from the website really made a difference."
+                  </i>
+                </p>
+                
+              </div>
+            </article>
+
+            {/* Card 3 */}
+            <article className="feature-card">
+              <img src="/bags.jpg" alt="Join our mission" className="feature-card__img" />
+              <div className="feature-card__body">
+                <h3 className="feature-card__title">Lindsey</h3>
+                <p className="feature-card__text">
+                  <i>
+                  "I'm social services representative from Work and Income and I've been signing recipients up to Kobra Kai services for the past 12 months. 
+                  All of my clients speak very highly of the food and how easy the service is to use. 10/10!"
+                  </i>
+                </p>
+                
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      { /* How It Works */ }
+      <section className="feature-section-3">
+        <div className="feature-section__overlay-3" />
+
+        <div className="feature-section__inner container">
+            <h2 className="feature-section__title">How it Works</h2>
+              <p className="feature-section__tagline">
+                Ordering free, home-cooked meals, delivered straight to your door has never been easier. <br></br>
+                Just register for an account using your community services number, and use your allocated tokens to order meals directly from the restaurant.
+                <br></br> Simple, Easy, and very tasty!
+              </p>
+          <div className="feature-section__grid">
+
+            {/* Card 1 */}
+            <article className="feature-card">
+              <div className="feature-card__body">
+                <h3 className="feature-card__title">Create Your Account</h3>
+                <p className="feature-card__text">
+                  Create your free account today, every account is credited with 10 Kobra Kai Tokens ready to be used to order homecooked meals directly to your door. Click the button below to register today!
+                </p>
+                <Link to="/register" className="btn btn--primary">Register</Link>
+              </div>
+            </article>
+
+            {/* Card 2 */}
+            <article className="feature-card">
+              <div className="feature-card__body">
+                <h3 className="feature-card__title">Browse and Order Meals</h3>
+                <p className="feature-card__text">
+                  Order meals from generous charity members directly to your door. Our meal providers are local
+                  restaurants and produce wholesalers who provide healthy, balanced meals ready to eat!
+                </p>
+                <Link to="/meals" className="btn btn--primary">Browse Meals</Link>
+              </div>
+            </article>
+
+            {/* Card 3 */}
+            <article className="feature-card">
+              <div className="feature-card__body">
+                <h3 className="feature-card__title">Manage your Orders</h3>
+                <p className="feature-card__text">
+                  You can view and manage your orders using the Account Dashboard, here you will find all of your pending, current, and past orders as well as your personal details and delivery address. 
+                </p>
+                <Link to="/Dashboard" className="btn btn--primary">Account Dashboard</Link>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }

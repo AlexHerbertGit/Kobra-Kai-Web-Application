@@ -40,7 +40,7 @@ a {
 }
 
 .container { 
-    max-width: 3000px; 
+    
     margin: 0 auto; 
     padding: 1rem; 
 }
@@ -217,7 +217,7 @@ a {
     text-align: center;
 }
 
-/* WHAT WE DO SECTION */
+/* FEATURE SECTION */
 .feature-section {
   position: relative;
   background: url('/fern-img.jpg');
@@ -225,7 +225,36 @@ a {
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  width: 100vw;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.feature-section-2 {
+  position: relative;
+  background: url('/ocean-food.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.feature-section-3 {
+  position: relative;
+  background: url('/grid.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .feature-section__overlay {
@@ -242,6 +271,33 @@ a {
   backdrop-filter: blur(3px);
 }
 
+.feature-section__overlay-2 {
+  position: absolute;
+  inset: 0;
+  background: var(
+    --feature-section-overlay,
+    linear-gradient(
+      0deg,
+      rgba(124, 242, 247, 0.45) 0%,
+      rgba(163, 224, 248, 0.35) 100%
+    )
+  );
+  backdrop-filter: blur(3px);
+}
+
+.feature-section__overlay-3 {
+  position: absolute;
+  inset: 0;
+  background: var(
+    --feature-section-overlay,
+    linear-gradient(
+      0deg,
+      rgba(218, 219, 217, 0.45) 0%,
+      rgba(32, 32, 32, 0.35) 100%
+    )
+  );
+}
+
 .feature-section__inner {
   position: relative;
   z-index: 1;
@@ -256,21 +312,38 @@ a {
   color: var(--clr-bg);
 }
 
+.feature-section__title-2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 3.6vw, 3rem);
+  margin: 0 0 .25rem;
+  color: var(--clr-nav-bg);
+}
+
 .feature-section__tagline {
   opacity: .9;
   margin: 0 0 1.5rem;
   font-style: italic;
 }
 
+.feature-section__tagline-2 {
+  opacity: .9;
+  margin: 0 0 1.5rem;
+  font-style: italic;
+  color: var(--clr-nav-bg);
+}
+
 .feature-section__grid {
   margin-top: 1rem;
   display: grid;
   gap: 1.25rem;
-  padding: 1rem;
-   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding: 5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  justify-items: center;
+  align-items: center;
+  
 }
 
-/* CARD */
+/* FEATURE CARD */
 .feature-card {
   background: var(--clr-surface);
   border: none;
@@ -278,7 +351,8 @@ a {
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
   text-align: center;
-  max-width: 90%;
+  max-width: 85%;
+  padding: 1rem;
 }
 
 .feature-card__img {
