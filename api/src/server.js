@@ -9,6 +9,7 @@ import { connectDB } from './utils/db.js';
 import authRoutes from './routes/authRoutes.js';
 import mealRoutes from './routes/mealRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import pushRoutes from './routes/pushRoutes.js';
 import { notFound, errorHandler } from './utils/error.js';
 
 const app = express();
@@ -33,6 +34,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 app.use('/api/auth', authRoutes);
 app.use('/api/meals', mealRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/push', pushRoutes);
 
 // Error handling
 app.use(notFound);
