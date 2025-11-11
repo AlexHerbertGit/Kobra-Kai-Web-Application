@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['beneficiary', 'member', 'admin'], default: 'beneficiary' },
-  tokenBalance: { type: Number, default: 5, min: 0 } // beneficiaries start with 5 by default
+  tokenBalance: { type: Number, default: 10, min: 0 } // beneficiaries start with 5 by default
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

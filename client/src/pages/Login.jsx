@@ -29,7 +29,7 @@ export default function Login() {
           <button className="btn">Login</button>
         </form>
       </div>
-      <div className='feature-card'>
+      <div className='auth-card'>
         <h2>Not Registered?</h2>
         <p>
           Register for an account here!

@@ -14,7 +14,7 @@ export async function register(req, res) {
   if (exists) return res.status(409).json({ message: 'Email already registered' });
 
   const passwordHash = await bcrypt.hash(password, 10);
-  // Beneficiaries get default tokenBalance (5). Members get 0 (they don't spend tokens).
+  // Beneficiaries get default tokenBalance (10). Members get 0 (they don't spend tokens).
   const initial = role === 'member' ? 0 : undefined;
 
   const user = await User.create({

@@ -42,7 +42,7 @@ export default function Register() {
             </form>
           </div>
 
-          <div className='feature-card'>
+          <div className='auth-card'>
             <h2>Already Registered?</h2>
             <p>
               Login to an account here!
