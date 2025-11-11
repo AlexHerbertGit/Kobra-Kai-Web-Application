@@ -12,7 +12,12 @@ async function request(path, { method='GET', body, headers } = {}) {
   });
   if (!res.ok) {
     let msg = 'Request failed';
-    try { const d = await res.json(); msg = d.message || JSON.stringify(d); } catch {}
+    try {
+      const d = await res.json();
+      msg = d.message || JSON.stringify(d);
+    } catch {
+      // ignore JSON parsing errors
+    }
     throw new Error(msg);
   }
   return res.status === 204 ? null : res.json();
@@ -34,5 +39,8 @@ export const api = {
   // orders
   listOrders: () => request('/orders'),
   placeOrder: (mealId) => request('/orders', { method:'POST', body:{ mealId } }),
-  acceptOrder: (id) => request(`/orders/${id}/accept`, { method:'POST' })
+   acceptOrder: (id) => request(`/orders/${id}/accept`, { method:'POST' }),
+
+  // notifications
+  savePushSubscription: (payload) => request('/notifications/subscriptions', { method: 'POST', body: payload })
 };

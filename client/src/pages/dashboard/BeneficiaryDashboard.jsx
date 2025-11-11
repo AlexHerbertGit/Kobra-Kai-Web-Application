@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../state/AuthContext.jsx';
 import { api } from '../../lib/api.js';
+import EnableNotifications from '../../components/EnableNotifications.jsx';
 
 export default function BeneficiaryDashboard() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function BeneficiaryDashboard() {
       <div className="card">
         <h2>Beneficiary Dashboard</h2>
         <p>Token Balance: <b>{user?.tokenBalance}</b></p>
+        <EnableNotifications />
       </div>
 
       <div className="card">

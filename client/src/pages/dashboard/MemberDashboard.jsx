@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
+import EnableNotifications from '../../components/EnableNotifications.jsx';
 
 export default function MemberDashboard() {
   const [form, setForm] = useState({ title:'', description:'', qtyAvailable:1, dietaryTags:[] });
@@ -25,6 +26,7 @@ export default function MemberDashboard() {
     <div className="grid">
       <div className="card">
         <h2>Member Dashboard</h2>
+         <EnableNotifications />
         <form onSubmit={createMeal} className="grid">
           <label>Title</label>
           <input className="input" value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required/>
@@ -34,6 +36,7 @@ export default function MemberDashboard() {
           <input className="input" type="number" min="0" value={form.qtyAvailable} onChange={e=>setForm({...form, qtyAvailable:e.target.value})}/>
           <button className="btn">Create Meal</button>
         </form>
+        <p style={{ marginTop: '0.5rem' }}>You currently have {meals.length} meals listed.</p>
       </div>
 
       <div className="card">
