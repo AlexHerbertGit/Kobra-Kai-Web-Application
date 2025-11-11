@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import mealRoutes from './routes/mealRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import { notFound, errorHandler } from './utils/error.js';
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/meals', mealRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handling
 app.use(notFound);

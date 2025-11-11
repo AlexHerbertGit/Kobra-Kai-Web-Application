@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import { signJwt, setAuthCookie } from '../utils/jwt.js';
+import { serializeUser } from './userController.js';
 
 // Register Function - Creates user account, adds their role, and sets initial token balance (if Beneficiary)
 export async function register(req, res) {
@@ -25,14 +26,7 @@ export async function register(req, res) {
   const token = signJwt(user._id.toString());
   setAuthCookie(res, token);
 
-  res.status(201).json({
-    id: user._id,
-    name: user.name,
-    address: user.address,
-    email: user.email,
-    role: user.role,
-    tokenBalance: user.tokenBalance
-  });
+  res.status(201).json(serializeUser(user));
 }
 
 // Login Function - Validates user credentials against DB, signs JWT and sets Cookie when validated, throws error if invalid.
@@ -50,13 +44,7 @@ export async function login(req, res) {
   const token = signJwt(user._id.toString());
   setAuthCookie(res, token);
 
-  res.json({ id: user._id, name: user.name, address: user.address, email: user.email, role: user.role, tokenBalance: user.tokenBalance });
-}
-
-// Me Function - Used to check the users account details.
-export async function me(req, res) {
-  const user = await User.findById(req.user.id).lean();
-  res.json({ id: user._id, name: user.name, address: user.address, email: user.email, role: user.role, tokenBalance: user.tokenBalance });
+  res.json(serializeUser(user));
 }
 
 // Logout Function - Logs out the user, clears auth cookie and JWT.

@@ -26,10 +26,11 @@ async function request(path, { method='GET', body, headers } = {}) {
 // Sets Route connections for the Express API
 export const api = {
   // auth
-  me: () => request('/auth/me'),
+  me: () => request('/users/me'),
   login: (email, password) => request('/auth/login', { method:'POST', body:{ email, password } }),
   register: (payload) => request('/auth/register', { method:'POST', body: payload }),
   logout: () => request('/auth/logout', { method:'POST' }),
+  updateMe: (payload) => request('/users/me', { method: 'PATCH', body: payload }),
 
   // meals
   listMeals: () => request('/meals'),
