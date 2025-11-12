@@ -8,8 +8,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
-    if (user.role === 'beneficiary') nav('/dashboard/beneficiary', { replace:true });
-    else nav('/dashboard/member', { replace:true });
+    const role = typeof user.role === 'string' ? user.role.toLowerCase() : user.role;
+    if (role === 'beneficiary') {
+      nav('/dashboard/beneficiary', { replace: true });
+    } else if (role === 'member' || role === 'admin') {
+      nav('/dashboard/member', { replace: true });
+    } else {
+      nav('/', { replace: true });
+    }
   }, [user, nav]);
 
   return null;

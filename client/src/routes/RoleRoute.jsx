@@ -4,5 +4,7 @@ export default function RoleRoute({ roles }) {
   const { user, ready } = useAuth();
   if (!ready) return null;
   if (!user) return <Navigate to="/login" replace/>;
-  return roles.includes(user.role) ? <Outlet/> : <Navigate to="/dashboard" replace/>;
+  const allowedRoles = roles.map((role) => role.toLowerCase());
+  const userRole = typeof user.role === 'string' ? user.role.toLowerCase() : user.role;
+  return allowedRoles.includes(userRole) ? <Outlet/> : <Navigate to="/dashboard" replace/>;
 }
