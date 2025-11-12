@@ -38,19 +38,28 @@ export function AuthProvider({ children }) {
     setNormalizedUser(normalized);
     return normalized;
   };
+
   const register = async (payload) => {
     const u = await api.register(payload);
     const normalized = normalizeUser(u);
     setNormalizedUser(normalized);
     return normalized;
   };
+
   const logout = async () => { await api.logout(); setNormalizedUser(null); };
 
   const updateProfile = async (payload) => {
     const updated = await api.updateMe(payload);
-    setUser(updated);
-    return updated;
+    const normalized = normalizeUser(updated);
+    setNormalizedUser(normalized);
+    return normalized;
   };
 
-   return <AuthCtx.Provider value={{ user, setUser: setNormalizedUser, ready, login, register, logout }}>{children}</AuthCtx.Provider>;
+   return (
+    <AuthCtx.Provider
+      value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}
+    >
+      {children}
+    </AuthCtx.Provider>
+  );
 }

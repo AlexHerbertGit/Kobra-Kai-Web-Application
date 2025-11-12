@@ -4,26 +4,37 @@ import EnableNotifications from '../../components/EnableNotifications.jsx';
 import { useAuth } from '../../state/AuthContext.jsx';
 
 export default function MemberDashboard() {
-  const [form, setForm] = useState({ title:'', description:'', qtyAvailable:1, dietaryTags:[] });
+  const { user, updateProfile } = useAuth();
+  const [form, setForm] = useState({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
   const [meals, setMeals] = useState([]);
   const [orders, setOrders] = useState([]);
   const [profile, setProfile] = useState({ name: '', address: '' });
   const [status, setStatus] = useState({ type: null, message: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { api.listMeals().then(setMeals); }, []);
-  useEffect(() => { api.listOrders().then(setOrders); }, []);
+  useEffect(() => {
+    api.listMeals().then(setMeals);
+  }, []);
+
+  useEffect(() => {
+    api.listOrders().then(setOrders);
+  }, []);
+
   useEffect(() => {
     if (user) {
       setProfile({ name: user.name ?? '', address: user.address ?? '' });
     }
   }, [user]);
 
-  async function createMeal(e){
+  async function createMeal(e) {
     e.preventDefault();
-    await api.createMeal({ ...form, qtyAvailable:Number(form.qtyAvailable), dietaryTags:(form.dietaryTags||[]) });
+     await api.createMeal({
+      ...form,
+      qtyAvailable: Number(form.qtyAvailable),
+      dietaryTags: form.dietaryTags || []
+    });
     setMeals(await api.listMeals());
-    setForm({ title:'', description:'', qtyAvailable:1, dietaryTags:[] });
+    setForm({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
   }
 
   async function loadOrders() {
@@ -46,7 +57,7 @@ export default function MemberDashboard() {
     }
   }
 
-  async function accept(id){
+   async function accept(id) {
     await api.moveOrderToCurrent(id);
     await loadOrders();
   }
@@ -68,27 +79,68 @@ export default function MemberDashboard() {
     accepted: 'Current'
   };
 
+  const orderSections = [
+    {
+      title: 'Pending',
+      orders: pendingOrders,
+      empty: 'No pending orders waiting for approval.',
+      actionLabel: 'Accept Order',
+      onAction: accept
+    },
+    {
+      title: 'Current',
+      orders: currentOrders,
+      empty: 'No meals are currently being prepared.',
+      actionLabel: 'Mark Completed',
+      onAction: complete
+    },
+    {
+      title: 'Completed',
+      orders: completedOrders,
+      empty: 'No completed orders yet.'
+    }
+  ];
 
   return (
-    <div className="grid">
-      <div className="card">
+    <div className="dashboard-grid">
+      <section className="card dashboard-section">
         <h2>Member Dashboard</h2>
         <EnableNotifications />
         <form onSubmit={createMeal} className="grid">
-          <label>Title</label>
-          <input className="input" value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required/>
-          <label>Description</label>
-          <textarea className="input" value={form.description} onChange={e=>setForm({...form, description:e.target.value})}/>
-          <label>Qty Available</label>
-          <input className="input" type="number" min="0" value={form.qtyAvailable} onChange={e=>setForm({...form, qtyAvailable:e.target.value})}/>
+          <label htmlFor="meal-title">Title</label>
+          <input
+            id="meal-title"
+            className="input"
+            value={form.title}
+            onChange={e => setForm({ ...form, title: e.target.value })}
+            required
+          />
+          <label htmlFor="meal-description">Description</label>
+          <textarea
+            id="meal-description"
+            className="input"
+            value={form.description}
+            onChange={e => setForm({ ...form, description: e.target.value })}
+          />
+          <label htmlFor="meal-qty">Qty Available</label>
+          <input
+            id="meal-qty"
+            className="input"
+            type="number"
+            min="0"
+            value={form.qtyAvailable}
+            onChange={e => setForm({ ...form, qtyAvailable: e.target.value })}
+          />
           <button className="btn">Create Meal</button>
         </form>
-        <p style={{ marginTop: '0.5rem' }}>You currently have {meals.length} meals listed.</p>
-      </div>
+         <p className="dashboard-subtext">You currently have {meals.length} meals listed.</p>
+      </section>
 
-      <div className="card">
+       <section className="card dashboard-section">
         <h3>Your Profile</h3>
-        <p><strong>Email:</strong> {user?.email}</p>
+        <p>
+          <strong>Email:</strong> {user?.email}
+        </p>
         <form className="grid" onSubmit={submitProfile}>
           <label htmlFor="member-profile-name">Name</label>
           <input
@@ -108,55 +160,41 @@ export default function MemberDashboard() {
             minLength={10}
             required
           />
-          <button className="btn" disabled={saving}>{saving ? 'Saving…' : 'Save Profile'}</button>
+          <button className="btn" disabled={saving}>
+            {saving ? 'Saving…' : 'Save Profile'}
+          </button>
         </form>
         {status.type && (
-          <p style={{ color: status.type === 'error' ? 'var(--color-error, #b00020)' : 'var(--color-success, #0a7d00)', marginTop: '0.5rem' }}>
+          <p
+            className={`dashboard-status ${
+              status.type === 'error' ? 'dashboard-status--error' : 'dashboard-status--success'
+            }`}
+          >
             {status.message}
           </p>
         )}
-      </div>
+      </section>
 
 
-      <div className="card">
+      <section className="card dashboard-section">
         <h3>Your Orders</h3>
-         {[{
-          title: 'Pending',
-          orders: pendingOrders,
-          empty: 'No pending orders waiting for approval.',
-          actionLabel: 'Accept Order',
-          onAction: accept
-        }, {
-          title: 'Current',
-          orders: currentOrders,
-          empty: 'No meals are currently being prepared.',
-          actionLabel: 'Mark Completed',
-          onAction: complete
-        }, {
-          title: 'Completed',
-          orders: completedOrders,
-          empty: 'No completed orders yet.'
-        }].map(section => (
-          <div key={section.title} style={{ marginTop: '1rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>{section.title}</h4>
+         {orderSections.map(section => (
+          <div key={section.title} className="orders-section">
+            <h4 className="orders-section__title">{section.title}</h4>
             {section.orders.length === 0 ? (
-              <p style={{ margin: 0, color: '#666' }}>{section.empty}</p>
+              <p className="orders-section__empty">{section.empty}</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {section.orders.map(o => (
-                  <li key={o._id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0',
-                    borderBottom: '1px solid #eee'
-                  }}>
+                  <li key={o._id} className="orders-list__item">
                     <div>
-                      <div style={{ fontWeight: 600 }}>{o.mealId?.title ?? 'Meal'}</div>
-                      <div style={{ fontSize: '0.85rem', color: '#555' }}>{statusLabels[o.status] ?? o.status}</div>
+                      <div className="orders-list__item-title">{o.mealId?.title ?? 'Meal'}</div>
+                      <div className="orders-list__item-status">{statusLabels[o.status] ?? o.status}</div>
                     </div>
                     {section.onAction && (
-                      <button className="btn" onClick={() => section.onAction(o._id)}>{section.actionLabel}</button>
+                      <button className="btn" onClick={() => section.onAction(o._id)}>
+                        {section.actionLabel}
+                      </button>
                     )}
                   </li>
                 ))}
@@ -164,7 +202,7 @@ export default function MemberDashboard() {
             )}
           </div>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

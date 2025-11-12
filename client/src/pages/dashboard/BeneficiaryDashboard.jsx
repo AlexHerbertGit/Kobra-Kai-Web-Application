@@ -11,8 +11,14 @@ export default function BeneficiaryDashboard() {
   const [status, setStatus] = useState({ type: null, message: '' });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { api.listMeals().then(setMeals); }, []);
-  useEffect(() => { api.listOrders().then(setOrders); }, []);
+  useEffect(() => {
+    api.listMeals().then(setMeals);
+  }, []);
+
+  useEffect(() => {
+    api.listOrders().then(setOrders);
+  }, []);
+
   useEffect(() => {
     if (user) {
       setProfile({ name: user.name ?? '', address: user.address ?? '' });
@@ -32,6 +38,7 @@ export default function BeneficiaryDashboard() {
   async function markCompleted(orderId) {
     await api.completeOrder(orderId);
     await loadOrders();
+  }
 
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const currentOrders = orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status));
@@ -59,15 +66,37 @@ export default function BeneficiaryDashboard() {
     }
   }
 
-  return (
-    <div className="grid">
-      <div className="card">
-        <h2>Beneficiary Dashboard</h2>
-        <p>Token Balance: <b>{user?.tokenBalance}</b></p>
-        <EnableNotifications />
-      </div>
+  const orderSections = [
+    {
+      title: 'Pending',
+      orders: pendingOrders,
+      empty: 'No pending orders. Explore meals to place a new order.'
+    },
+    {
+      title: 'Current',
+      orders: currentOrders,
+      empty: 'No current orders. Pending orders will appear here once accepted.',
+      actionLabel: 'Confirm Pickup',
+      onAction: markCompleted
+    },
+    {
+      title: 'Completed',
+      orders: completedOrders,
+      empty: 'No completed orders yet.'
+    }
+  ];
 
-      <div className="card">
+  return (
+    <div className="dashboard-grid">
+      <section className="card dashboard-section">
+        <h2>Beneficiary Dashboard</h2>
+        <p>
+          Token Balance: <b>{user?.tokenBalance}</b>
+        </p>
+        <EnableNotifications />
+      </section>
+
+      <section className="card dashboard-section">
         <h3>Your Profile</h3>
         <p><strong>Email:</strong> {user?.email}</p>
         <form className="grid" onSubmit={submitProfile}>
@@ -96,57 +125,22 @@ export default function BeneficiaryDashboard() {
             {status.message}
           </p>
         )}
-      </div>
+      </section>
 
-
-      <div className="card">
-        <h3>Available Meals</h3>
-        <div className="grid">
-          {meals.map(m => (
-            <div key={m._id} className="card">
-              <h4>{m.title}</h4>
-              <p>{m.description}</p>
-              <p>Qty: {m.qtyAvailable}</p>
-              <button className="btn" onClick={() => order(m._id)} disabled={m.qtyAvailable<=0}>Place Order</button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="card">
+      <section className="card dashboard-section">
         <h3>Your Orders</h3>
-        {[{
-          title: 'Pending',
-          orders: pendingOrders,
-          empty: 'No pending orders. Explore meals to place a new order.'
-        }, {
-          title: 'Current',
-          orders: currentOrders,
-          empty: 'No current orders. Pending orders will appear here once accepted.',
-          actionLabel: 'Confirm Pickup',
-          onAction: markCompleted
-        }, {
-          title: 'Completed',
-          orders: completedOrders,
-          empty: 'No completed orders yet.'
-        }].map(section => (
-          <div key={section.title} style={{ marginTop: '1rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>{section.title}</h4>
+        {orderSections.map(section => (
+          <div key={section.title} className="orders-section">
+            <h4 className="orders-section__title">{section.title}</h4>
             {section.orders.length === 0 ? (
-              <p style={{ margin: 0, color: '#666' }}>{section.empty}</p>
+              <p className="orders-section__empty">{section.empty}</p>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <ul className="orders-list">
                 {section.orders.map(o => (
-                  <li key={o._id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0',
-                    borderBottom: '1px solid #eee'
-                  }}>
+                   <li key={o._id} className="orders-list__item">
                     <div>
-                      <div style={{ fontWeight: 600 }}>{o.mealId?.title ?? 'Meal'}</div>
-                      <div style={{ fontSize: '0.85rem', color: '#555' }}>{statusLabels[o.status] ?? o.status}</div>
+                      <div className="orders-list__item-title">{o.mealId?.title ?? 'Meal'}</div>
+                      <div className="orders-list__item-status">{statusLabels[o.status] ?? o.status}</div>
                     </div>
                     {section.onAction && (
                       <button className="btn" onClick={() => section.onAction(o._id)}>{section.actionLabel}</button>
@@ -157,7 +151,7 @@ export default function BeneficiaryDashboard() {
             )}
           </div>
         ))}
-      </div>
-    </div>
+    </section>
+  </div>
   );
-}};
+};
