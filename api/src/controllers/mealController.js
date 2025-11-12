@@ -3,8 +3,30 @@ import Meal from '../models/Meal.js';
 
 // listMeals Function - Pulls the meals stored in the database, creates a json object that is returned.
 export async function listMeals(_req, res) {
-  const meals = await Meal.find().sort({ createdAt: -1 }).lean();
-  res.json(meals);
+  const meals = await Meal.find()
+    .sort({ createdAt: -1 })
+    .populate('memberId', 'name address')
+    .lean();
+
+  const enrichedMeals = meals.map(meal => {
+    const member = meal.memberId && typeof meal.memberId === 'object'
+      ? {
+          id: meal.memberId._id?.toString() ?? '',
+          name: meal.memberId.name ?? 'Community Member',
+          address: meal.memberId.address ?? ''
+        }
+      : null;
+
+    const memberId = member?.id || (typeof meal.memberId === 'string' ? meal.memberId : meal.memberId?.toString?.());
+
+    return {
+      ...meal,
+      member,
+      memberId
+    };
+  });
+
+  res.json(enrichedMeals);
 }
 
 // creatMeal Function - Used by Member users to create meals using the frontend interface.

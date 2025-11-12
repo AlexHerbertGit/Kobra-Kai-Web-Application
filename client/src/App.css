@@ -796,3 +796,338 @@ a {
     align-items: flex-start;
   }
 }
+
+
+/* MEALS PAGE */
+
+.meals-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding-bottom: 4rem;
+}
+
+.meals-hero {
+  position: relative;
+  min-height: 340px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(120deg, rgba(8, 47, 73, 0.65), rgba(8, 47, 73, 0.2)),
+    url('/fern-img.jpg') center/cover no-repeat;
+  color: #f9fafb;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  padding: clamp(1.75rem, 4vw, 3.5rem);
+  margin: 1rem;
+}
+
+.meals-hero__content {
+  max-width: 620px;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.meals-hero__eyebrow {
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.meals-hero__title {
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  margin: 0;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.meals-hero__description {
+  margin: 0;
+  max-width: 56ch;
+  color: rgba(249, 250, 251, 0.85);
+  font-size: 1.05rem;
+}
+
+.meals-intro {
+  background: linear-gradient(135deg, rgba(124, 165, 73, 0.1), rgba(6, 90, 116, 0.08));
+  border-radius: 20px;
+  padding: clamp(1.25rem, 4vw, 2rem) clamp(1.25rem, 4vw, 3rem);
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.meals-intro h2 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.meals-intro p {
+  margin: 0;
+  color: var(--clr-text-muted);
+  font-size: 1.05rem;
+}
+
+.meals-layout {
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 3fr);
+  margin: 1rem;
+}
+
+.meals-layout--single {
+  grid-template-columns: 1fr;
+}
+
+.meals-sidebar {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 20px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.3);
+  display: grid;
+  gap: 1.75rem;
+  align-self: start;
+}
+
+.meals-sidebar__title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.meals-sidebar__hint {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.meals-sidebar__group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.meals-sidebar__group-title {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.meals-filter__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.meals-filter__chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.1);
+  border: 1px solid rgba(248, 250, 252, 0.2);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.meals-filter__chip:hover {
+  transform: translateY(-1px);
+  background: rgba(248, 250, 252, 0.18);
+}
+
+.meals-filter__chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.meals-filter__chip span {
+  color: inherit;
+}
+
+.meals-filter__chip.is-selected {
+  background: #7ca549;
+  border-color: #7ca549;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.meals-sidebar__clear {
+  justify-self: start;
+  padding: 0.55rem 1.35rem;
+  border-radius: 999px;
+  border: none;
+  background: #fbbf24;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.meals-sidebar__clear:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.meals-provider-list {
+  display: grid;
+  gap: 2rem;
+}
+
+.meals-page__empty {
+  background: rgba(124, 165, 73, 0.08);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--clr-text-muted);
+  border: 1px dashed rgba(124, 165, 73, 0.45);
+}
+
+.meals-provider {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.12);
+  display: grid;
+  gap: 1.75rem;
+}
+
+.meals-provider__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  padding-bottom: 1rem;
+}
+
+.meals-provider__name {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+}
+
+.meals-provider__address {
+  margin: 0;
+  color: var(--clr-text-muted);
+}
+
+.meals-provider__count {
+  font-weight: 600;
+  color: var(--clr-success);
+  align-self: center;
+}
+
+.meals-provider__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.meals-card {
+  background: linear-gradient(160deg, rgba(186, 226, 137, 0.18), rgba(249, 250, 251, 0.95));
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: 0 15px 25px rgba(15, 23, 42, 0.12);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.meals-card__title {
+  margin: 0;
+  font-size: 1.15rem;
+  padding-bottom: 0.5rem;
+}
+
+.meals-card__description {
+  margin: 0;
+  color: var(--clr-text-muted);
+  line-height: 1.5;
+  padding-bottom: 0.5rem;
+}
+
+.meals-card__stock {
+  margin: 0;
+  font-weight: 500;
+  color: var(--clr-text);
+  padding-bottom: 1rem;
+}
+
+.meals-card__tags {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding-bottom: 0.5rem;
+}
+
+.meals-card__tags li {
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--clr-text);
+}
+
+.meals-card__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.meals-card__order {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.45rem;
+  background: #0f766e;
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.meals-card__order:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+@media (max-width: 960px) {
+  .meals-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .meals-sidebar {
+    order: 2;
+  }
+
+  .meals-provider-list {
+    order: 1;
+  }
+
+  .meals-provider__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .meals-provider__count {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .meals-hero {
+    border-radius: 20px;
+    min-height: 280px;
+    padding: 2rem;
+  }
+
+  .meals-card {
+    grid-template-columns: 1fr;
+  }
+}
