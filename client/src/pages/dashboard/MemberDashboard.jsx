@@ -15,7 +15,7 @@ const DIETARY_TAG_OPTIONS = [
 
 export default function MemberDashboard() {
   const { user, updateProfile } = useAuth();
-  const [form, setForm] = useState({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
+  const [form, setForm] = useState({ title: '', description: '', qtyAvailable: 1, dietaryTags: [], tokenValue: 1 });
   const [meals, setMeals] = useState([]);
   const [orders, setOrders] = useState([]);
   const [profile, setProfile] = useState({ name: '', address: '' });
@@ -45,7 +45,7 @@ export default function MemberDashboard() {
   }, [meals, memberId]);
 
   function resetMealForm() {
-    setForm({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
+    setForm({ title: '', description: '', qtyAvailable: 1, dietaryTags: [], tokenValue: 1 });
     setEditingMealId(null);
   }
 
@@ -54,6 +54,7 @@ export default function MemberDashboard() {
     await api.createMeal({
       ...form,
       qtyAvailable: Number(form.qtyAvailable),
+      tokenValue: Number(form.tokenValue),
       dietaryTags: form.dietaryTags || []
     });
     setMeals(await api.listMeals());
@@ -66,6 +67,7 @@ export default function MemberDashboard() {
     await api.updateMeal(editingMealId, {
       ...form,
       qtyAvailable: Number(form.qtyAvailable),
+      tokenValue: Number(form.tokenValue),
       dietaryTags: form.dietaryTags || []
     });
     setMeals(await api.listMeals());
@@ -86,7 +88,8 @@ export default function MemberDashboard() {
       title: meal.title ?? '',
       description: meal.description ?? '',
       qtyAvailable: meal.qtyAvailable ?? 1,
-      dietaryTags: meal.dietaryTags ?? []
+      dietaryTags: meal.dietaryTags ?? [],
+      tokenValue: meal.tokenValue ?? 1
     });
   }
 
@@ -272,9 +275,9 @@ export default function MemberDashboard() {
       <div className="dashboard-columns">
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
-          <h2>Create a Meal Offering</h2>
+          <h2>Create a Meal Listing</h2>
           <p className="dashboard-panel__subtitle">
-            Share what you’re preparing so beneficiaries can reserve meals. Include enticing descriptions and available portions.
+            Share what you’re serving so beneficiaries can order meals. Include enticing descriptions and available portions.
           </p>
         </div>
 
@@ -317,6 +320,22 @@ export default function MemberDashboard() {
               onChange={e => setForm({ ...form, qtyAvailable: e.target.value })}
             />
           </div>
+
+          <div className="dashboard-form__group dashboard-form__group--compact">
+            <label className="dashboard-form__label" htmlFor="meal-token-value">
+              Token Value Per Portion
+            </label>
+            <input
+              id="meal-token-value"
+              className="input"
+              type="number"
+              min="0"
+              value={form.tokenValue}
+              required
+              onChange={e => setForm({ ...form, tokenValue: e.target.value })}
+            />
+          </div>
+
 
           <fieldset className="dashboard-tag-selector">
             <legend>Dietary Tags</legend>
@@ -371,8 +390,8 @@ export default function MemberDashboard() {
           </p>
 
           <p className="dashboard-meta dashboard-meta--accent">
-          You currently have {meals.length} meals listed.
-        </p>
+            You currently have {memberMeals.length} meal{memberMeals.length === 1 ? '' : 's'} listed.
+          </p>
         </div>
         {memberMeals.length === 0 ? (
           <p className="dashboard-orders__empty">You have not listed any meals yet.</p>
@@ -385,6 +404,9 @@ export default function MemberDashboard() {
                   <p>{meal.description}</p>
                   <p>
                     <strong>Portions:</strong> {meal.qtyAvailable}
+                  </p>
+                  <p>
+                    <strong>Token Value:</strong> {meal.tokenValue}
                   </p>
                   {meal.dietaryTags?.length > 0 && (
                     <p>

@@ -9,37 +9,54 @@ export async function placeOrder(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  // beneficiary places an order for a meal (costTokens = 1)
-  const { mealId } = req.body;
+  // beneficiary places an order for a meal 
+  const { mealId, quantity } = req.body;
+  const qty = Number(quantity ?? 1);
+  if (!Number.isInteger(qty) || qty <= 0) {
+    return res.status(400).json({ message: 'Quantity must be a positive integer' });
+  }
 
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const meal = await Meal.findById(mealId).session(session);
     if (!meal) throw Object.assign(new Error('Meal not found'), { statusCode: 404 });
-    if (meal.qtyAvailable <= 0) throw Object.assign(new Error('Meal out of stock'), { statusCode: 400 });
+    if (meal.qtyAvailable < qty) throw Object.assign(new Error('Meal out of stock'), { statusCode: 400 });
 
     const beneficiary = await User.findById(req.user.id).session(session);
     if (!beneficiary) throw Object.assign(new Error('User not found'), { statusCode: 404 });
     if (beneficiary.role !== 'beneficiary') throw Object.assign(new Error('Only beneficiaries can place orders'), { statusCode: 403 });
-    if (beneficiary.tokenBalance <= 0) throw Object.assign(new Error('Insufficient tokens'), { statusCode: 400 });
+    const tokenValue = Number.isFinite(meal.tokenValue) ? Number(meal.tokenValue) : 1;
+    const totalCost = tokenValue * qty;
+    if (beneficiary.tokenBalance < totalCost) throw Object.assign(new Error('Insufficient tokens'), { statusCode: 400 });
+
+    const member = await User.findById(meal.memberId).session(session);
+    if (!member) throw Object.assign(new Error('Meal provider not found'), { statusCode: 404 });
 
     // decrement stock and tokens atomically
-    meal.qtyAvailable -= 1;
-    beneficiary.tokenBalance -= 1;
+    meal.qtyAvailable -= qty;
+    beneficiary.tokenBalance -= totalCost;
+    member.tokenBalance = (member.tokenBalance ?? 0) + totalCost;
     await meal.save({ session });
     await beneficiary.save({ session });
+    await member.save({ session });
 
     const order = await Order.create([{
       mealId: meal._id,
       beneficiaryId: beneficiary._id,
       memberId: meal.memberId,
       status: 'pending',
-      costTokens: 1
+      quantity: qty,
+      costTokens: totalCost
     }], { session });
 
     await session.commitTransaction();
-    res.status(201).json(order[0]);
+    const createdOrder = order[0]?.toObject ? order[0].toObject() : order[0];
+    res.status(201).json({
+      order: createdOrder,
+      beneficiaryBalance: beneficiary.tokenBalance,
+      memberBalance: member.tokenBalance
+    });
   } catch (err) {
     await session.abortTransaction();
     throw err;

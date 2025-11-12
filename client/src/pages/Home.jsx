@@ -64,7 +64,7 @@ export default function Home() {
                   Everyone experiences tough times and challenges in life; Kobra Kai’s mission is to support the
                   community by providing nutritious meals to those who need it the most!
                 </p>
-                <Link to="/about" className="btn btn--primary">About Us</Link>
+                <Link to="/about" className="btn">About Us</Link>
               </div>
             </article>
 
@@ -77,7 +77,7 @@ export default function Home() {
                   Order meals from generous charity members directly to your door. Our meal providers are local
                   restaurants and produce wholesalers who provide healthy, balanced meals ready to eat!
                 </p>
-                <Link to="/meals" className="btn btn--primary">Order Meals</Link>
+                <Link to="/meals" className="btn">Order Meals</Link>
               </div>
             </article>
 
@@ -90,7 +90,7 @@ export default function Home() {
                   Do you own a local hospitality business and want to support the Nelson community? Join our mission and
                   sign up to become a Kobra Kai Charity Member.
                 </p>
-                <Link to="/register" className="btn btn--primary">Register Here</Link>
+                <Link to="/register" className="btn">Register Here</Link>
               </div>
             </article>
           </div>
@@ -174,7 +174,7 @@ export default function Home() {
                 <p className="feature-card__text">
                   Create your free account today, every account is credited with 10 Kobra Kai Tokens ready to be used to order homecooked meals directly to your door. Click the button below to register today!
                 </p>
-                <Link to="/register" className="btn btn--primary">Register</Link>
+                <Link to="/register" className="btn">Register</Link>
               </div>
             </article>
 
@@ -186,7 +186,7 @@ export default function Home() {
                   Order meals from generous charity members directly to your door. Our meal providers are local
                   restaurants and produce wholesalers who provide healthy, balanced meals ready to eat!
                 </p>
-                <Link to="/meals" className="btn btn--primary">Browse Meals</Link>
+                <Link to="/meals" className="btn">Browse Meals</Link>
               </div>
             </article>
 
@@ -197,7 +197,7 @@ export default function Home() {
                 <p className="feature-card__text">
                   You can view and manage your orders using the Account Dashboard, here you will find all of your pending, current, and past orders as well as your personal details and delivery address. 
                 </p>
-                <Link to="/Dashboard" className="btn btn--primary">Account Dashboard</Link>
+                <Link to="/Dashboard" className="btn">Account Dashboard</Link>
               </div>
             </article>
           </div>

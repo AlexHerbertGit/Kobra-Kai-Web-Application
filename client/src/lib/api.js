@@ -36,10 +36,11 @@ export const api = {
   listMeals: () => request('/meals'),
   createMeal: (payload) => request('/meals', { method:'POST', body: payload }),
   updateMeal: (id, payload) => request(`/meals/${id}`, { method:'PUT', body: payload }),
+  deleteMeal: (id) => request(`/meals/${id}`, { method: 'DELETE' }),
 
   // orders
   listOrders: () => request('/orders'),
-  placeOrder: (mealId) => request('/orders', { method:'POST', body:{ mealId } }),
+  placeOrder: (mealId, quantity = 1) => request('/orders', { method:'POST', body:{ mealId, quantity } }),
   moveOrderToCurrent: (id) => request(`/orders/${id}/current`, { method:'POST' }),
   completeOrder: (id) => request(`/orders/${id}/completed`, { method:'POST' }),
 

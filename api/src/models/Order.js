@@ -10,6 +10,7 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'current', 'completed', 'cancelled', 'inProgress', 'accepted'],
     default: 'pending'
   },
+  quantity: { type: Number, default: 1, min: 1 },
   costTokens: { type: Number, default: 1, min: 0 }
 }, { timestamps: true });
 

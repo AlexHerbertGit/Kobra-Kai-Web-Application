@@ -12,6 +12,7 @@ router.get('/', requireAuth, listOrders);
 router.post('/',
   requireAuth, requireRole('beneficiary'),
   body('mealId').isMongoId(),
+  body('quantity').optional().isInt({ min: 1 }).toInt(),
   placeOrder
 );
 

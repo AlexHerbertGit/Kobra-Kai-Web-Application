@@ -132,7 +132,8 @@ a {
     color: white;  
     cursor:pointer;
     width: 150px;
-    font-family: var(--font-heading); 
+    font-family: var(--font-heading);
+    text-align: center; 
 }
 
 .btn:hover { 
@@ -396,6 +397,7 @@ a {
   background: var(--clr-success);
   border: none;
   color: #fff;
+  
 }
 .btn--primary:hover {
   filter: brightness(0.95);
@@ -1096,6 +1098,77 @@ a {
   transform: translateY(-1px);
   filter: brightness(1.05);
 }
+
+.meals-card__tokens,
+.meals-card__total {
+  margin-top: 0.35rem;
+  font-weight: 500;
+  color: #1f2933;
+}
+
+.meals-card__order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.meals-card__order-form label {
+  font-weight: 600;
+}
+
+.meals-card__order-form input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+}
+
+.meals-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.meals-card__cancel {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.45rem;
+  background: #f1f5f9;
+  color: #1f2933;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.meals-card__cancel:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+.meals-card__order[disabled],
+.meals-card__cancel[disabled] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.meals-order-status {
+  margin: 1rem auto;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  max-width: 720px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.meals-order-status--success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.meals-order-status--error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 
 @media (max-width: 960px) {
   .meals-layout {

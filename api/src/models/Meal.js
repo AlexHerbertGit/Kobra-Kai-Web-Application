@@ -7,6 +7,7 @@ const mealSchema = new mongoose.Schema({
   description: { type: String, trim: true, maxlength: 1000 },
   dietaryTags: [{ type: String, trim: true }],
   qtyAvailable: { type: Number, required: true, min: 0 },
+  tokenValue: { type: Number, required: true, min: 0, default: 1 },
 }, { timestamps: true });
 
 export default mongoose.model('Meal', mealSchema);

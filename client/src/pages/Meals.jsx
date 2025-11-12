@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api.js';
+import { useAuth } from '../state/AuthContext.jsx';
 
 export default function Meals() {
   const [meals, setMeals] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [orderingMealId, setOrderingMealId] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [ordering, setOrdering] = useState(false);
+  const [orderStatus, setOrderStatus] = useState({ type: null, message: '' });
+  const auth = useAuth();
+  const user = auth?.user;
+  const setUser = auth?.setUser ?? (() => {});
 
   useEffect(() => {
     api.listMeals().then(setMeals);
@@ -61,6 +69,46 @@ export default function Meals() {
     setSelectedTags([]);
   }
 
+  function handleSelectMeal(meal) {
+    if (!user) {
+      setOrderStatus({ type: 'error', message: 'Please sign in as a beneficiary to order meals.' });
+      return;
+    }
+    if (user.role !== 'beneficiary') {
+      setOrderStatus({ type: 'error', message: 'Only beneficiary accounts can order meals.' });
+      return;
+    }
+
+    setOrderingMealId(meal._id);
+    setOrderQuantity(1);
+    setOrderStatus({ type: null, message: '' });
+  }
+
+  function handleCancelOrder() {
+    setOrderingMealId(null);
+    setOrderQuantity(1);
+  }
+
+  async function handleSubmitOrder(meal) {
+    if (!meal) return;
+    setOrdering(true);
+    try {
+      const result = await api.placeOrder(meal._id, orderQuantity);
+      setOrderStatus({ type: 'success', message: 'Your order has been placed successfully.' });
+      if (result?.beneficiaryBalance !== undefined) {
+        setUser(prev => (prev ? { ...prev, tokenBalance: result.beneficiaryBalance } : prev));
+      }
+      setMeals(await api.listMeals());
+    } catch (err) {
+      setOrderStatus({ type: 'error', message: err.message || 'Failed to place order.' });
+    } finally {
+      setOrdering(false);
+      setOrderingMealId(null);
+      setOrderQuantity(1);
+    }
+  }
+
+
   return (
     <div className="meals-page">
       <section className="meals-hero">
@@ -82,6 +130,12 @@ export default function Meals() {
           <p>Browse each provider&apos;s offerings and mix and match meals that suit your whānau.</p>
         </div>
       </section>
+
+      {orderStatus.type ? (
+        <div className={`meals-order-status meals-order-status--${orderStatus.type}`}>
+          {orderStatus.message}
+        </div>
+      ) : null}
 
       <div className={`meals-layout${availableTags.length === 0 ? ' meals-layout--single' : ''}`}>
         {availableTags.length > 0 ? (
@@ -150,6 +204,9 @@ export default function Meals() {
                         <p className="meals-card__stock">
                           Portions available: <strong>{meal.qtyAvailable}</strong>
                         </p>
+                        <p className="meals-card__tokens">
+                          Token value per portion: <strong>{meal.tokenValue}</strong>
+                        </p>
                         {meal.dietaryTags?.length ? (
                           <ul className="meals-card__tags">
                             {meal.dietaryTags.map(tag => (
@@ -159,9 +216,54 @@ export default function Meals() {
                         ) : null}
                       </div>
                       <div className="meals-card__footer">
-                        <button type="button" className="meals-card__order">
-                          Order
-                        </button>
+                        {orderingMealId === meal._id ? (
+                          <form
+                            className="meals-card__order-form"
+                            onSubmit={e => {
+                              e.preventDefault();
+                              handleSubmitOrder(meal);
+                            }}
+                          >
+                            <label htmlFor={`order-qty-${meal._id}`}>Quantity</label>
+                            <input
+                              id={`order-qty-${meal._id}`}
+                              type="number"
+                              min="1"
+                              max={meal.qtyAvailable}
+                              value={orderQuantity}
+                              onChange={e => {
+                                const value = Number(e.target.value);
+                                if (Number.isNaN(value)) {
+                                  setOrderQuantity(1);
+                                  return;
+                                }
+                                const maxQty = meal.qtyAvailable > 0 ? meal.qtyAvailable : 1;
+                                const clamped = Math.min(Math.max(1, value), maxQty);
+                                setOrderQuantity(clamped);
+                              }}
+                            />
+                            <p className="meals-card__total">
+                              Total cost: <strong>{meal.tokenValue * orderQuantity}</strong> tokens
+                            </p>
+                            <div className="meals-card__actions">
+                              <button type="submit" className="meals-card__order" disabled={ordering}>
+                                {ordering ? 'Placing…' : 'Confirm Order'}
+                              </button>
+                              <button type="button" className="meals-card__cancel" onClick={handleCancelOrder} disabled={ordering}>
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            className="meals-card__order"
+                            onClick={() => handleSelectMeal(meal)}
+                            disabled={meal.qtyAvailable === 0}
+                          >
+                            {meal.qtyAvailable === 0 ? 'Out of Stock' : 'Order'}
+                          </button>
+                        )}
                       </div>
                     </article>
                   ))}
@@ -170,7 +272,7 @@ export default function Meals() {
             ))
           )}
         </div>
-         </div>
+      </div>
     </div>
   );
 };
