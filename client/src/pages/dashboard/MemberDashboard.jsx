@@ -21,6 +21,7 @@ export default function MemberDashboard() {
   const [profile, setProfile] = useState({ name: '', address: '' });
   const [status, setStatus] = useState({ type: null, message: '' });
   const [saving, setSaving] = useState(false);
+  const [editingMealId, setEditingMealId] = useState(null);
 
   useEffect(() => {
     api.listMeals().then(setMeals);
@@ -36,6 +37,18 @@ export default function MemberDashboard() {
     }
   }, [user]);
 
+  const memberId = user?.id ?? null;
+
+  const memberMeals = useMemo(() => {
+    if (!memberId) return [];
+    return meals.filter(meal => meal.memberId === memberId);
+  }, [meals, memberId]);
+
+  function resetMealForm() {
+    setForm({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
+    setEditingMealId(null);
+  }
+
   async function createMeal(e) {
     e.preventDefault();
     await api.createMeal({
@@ -44,7 +57,37 @@ export default function MemberDashboard() {
       dietaryTags: form.dietaryTags || []
     });
     setMeals(await api.listMeals());
-    setForm({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
+    resetMealForm();
+  }
+
+  async function handleUpdateMeal(e) {
+    e.preventDefault();
+    if (!editingMealId) return;
+    await api.updateMeal(editingMealId, {
+      ...form,
+      qtyAvailable: Number(form.qtyAvailable),
+      dietaryTags: form.dietaryTags || []
+    });
+    setMeals(await api.listMeals());
+    resetMealForm();
+  }
+
+  async function handleDeleteMeal(id) {
+    await api.deleteMeal(id);
+    setMeals(await api.listMeals());
+    if (editingMealId === id) {
+      resetMealForm();
+    }
+  }
+
+  function handleEditMeal(meal) {
+    setEditingMealId(meal._id);
+    setForm({
+      title: meal.title ?? '',
+      description: meal.description ?? '',
+      qtyAvailable: meal.qtyAvailable ?? 1,
+      dietaryTags: meal.dietaryTags ?? []
+    });
   }
 
   async function loadOrders() {
@@ -126,7 +169,7 @@ export default function MemberDashboard() {
         </div>
       </header>
 
-       <div className="dashboard-columns">
+      <div className="dashboard-columns">
         <section className="dashboard-panel">
           <div className="dashboard-panel__header">
             <h2>Account Details</h2>
@@ -182,7 +225,7 @@ export default function MemberDashboard() {
           )}
         </section>
 
-      <section className="dashboard-panel">
+        <section className="dashboard-panel">
           <div className="dashboard-panel__header">
             <h2>Order Management</h2>
             <p className="dashboard-panel__subtitle">
@@ -190,7 +233,7 @@ export default function MemberDashboard() {
             </p>
           </div>
       
-       <div className="dashboard-orders">
+        <div className="dashboard-orders">
             {orderSections.map(section => (
               <div key={section.title} className="dashboard-orders__group">
                 <div className="dashboard-orders__group-header">
@@ -234,7 +277,7 @@ export default function MemberDashboard() {
           </p>
         </div>
 
-        <form onSubmit={createMeal} className="dashboard-form ">
+        <form onSubmit={editingMealId ? handleUpdateMeal : createMeal} className="dashboard-form">
           <div className="dashboard-form__group">
             <label className="dashboard-form__label" htmlFor="meal-title">
               Title
@@ -301,15 +344,64 @@ export default function MemberDashboard() {
             </div>
           </fieldset>
 
-          <button className="btn" type="submit">
-            Create Meal
-          </button>
+          {!editingMealId && (
+            <button className="btn" type="submit">
+              Create Meal
+            </button>
+          )}
+          {editingMealId && (
+            <>
+              <button className="btn" type="submit">
+                Update Meal
+              </button>
+              <button type="button" className="btn" onClick={resetMealForm}>
+                Cancel
+              </button>
+            </>
+          )}
         </form>
 
         <p className="dashboard-meta dashboard-meta--accent">
           You currently have {meals.length} meals listed.
         </p>
       </section>
+
+      <section className="dashboard-panel">
+        <div className="dashboard-panel__header">
+          <h2>Your Meal Listings</h2>
+          <p className="dashboard-panel__subtitle">
+            Manage the meals you have shared with the community. Edit details or remove listings that are no longer available.
+          </p>
+        </div>
+        {memberMeals.length === 0 ? (
+          <p className="dashboard-orders__empty">You have not listed any meals yet.</p>
+        ) : (
+          <ul className="dashboard-orders__list">
+            {memberMeals.map(meal => (
+              <li key={meal._id} className="dashboard-orders__item">
+                <div className="dashboard-orders__item-info">
+                  <h4>{meal.title}</h4>
+                  <p>{meal.description}</p>
+                  <p>
+                    <strong>Portions:</strong> {meal.qtyAvailable}
+                  </p>
+                  {meal.dietaryTags?.length > 0 && (
+                    <p>
+                      <strong>Tags:</strong> {meal.dietaryTags.join(', ')}
+                    </p>
+                  )}
+                </div>
+                <button type="button" className="btn" onClick={() => handleEditMeal(meal)}>
+                  Edit
+                </button>
+                <button type="button" className="btn" onClick={() => handleDeleteMeal(meal._id)}>
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
-}
+};

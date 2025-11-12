@@ -661,6 +661,7 @@ a {
   border-radius: 0.75rem;
   display: grid;
   gap: 0.5rem;
+  width: 50%;
 }
 
 .dashboard-tag-selector legend {
