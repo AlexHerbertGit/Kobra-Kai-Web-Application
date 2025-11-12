@@ -14,8 +14,9 @@ export default function NavBar() {
     <nav className="nav">
       <div className="nav__inner container">
         {/* Brand */}
-        <Link to="/" className="nav__brand">Kobra Kai</Link>
-
+        <Link to="/" className="nav__brand">
+        <img src='/kobra-kai-logo.png' className='nav__brand__img'></img>
+        </Link>
         {/* Hamburger (mobile only) */}
         <button
           className={`hamburger ${open ? 'is-open' : ''}`}

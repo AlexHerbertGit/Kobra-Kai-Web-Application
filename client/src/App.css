@@ -49,6 +49,7 @@ a {
 .nav a { color: var(--clr-nav-link); }
 .nav__inner { display:flex; align-items:center; justify-content: space-between; padding: 1rem 1rem; }
 .nav__brand { font-weight:800; }
+.nav__brand__img { max-width: 80px;}
 
 /* Desktop menu layout */
 .nav__menu { display:flex; align-items:center;  gap:1rem; }
@@ -114,6 +115,8 @@ a {
   }
 
   .nav__auth { padding-bottom: .5rem; }
+
+  .nav__brand__img { max-width: 80px;}
 }
 
 /* DESKTOP: regular inline layout */
@@ -733,14 +736,14 @@ a {
    gap: 0.75rem;
 }
 
-dashboard-orders__item {
+.dashboard-orders__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.9rem 1rem;
+  padding: 1rem;
   border-radius: 14px;
-  background: var(--clr-surface);
+  background: var(--clr-nav-link);
   box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
 }
 
@@ -753,6 +756,7 @@ dashboard-orders__item {
   margin: 0;
   font-size: 0.9rem;
   color: var(--clr-text-muted);
+  padding-top: 0.5rem;
 }
 
 .dashboard-meals {

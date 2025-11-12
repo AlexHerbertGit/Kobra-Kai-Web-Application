@@ -162,7 +162,7 @@ export default function MemberDashboard() {
     <div className="dashboard">
       <header className="dashboard-hero">
         <div className="dashboard-hero__content">
-          <h1 className="dashboard-hero__title">Account Dashboard</h1>
+          <h1 className="dashboard-hero__title">Member Dashboard</h1>
           <p className="dashboard-hero__text">
             Coordinate meal donations, keep your profile up to date, and manage orders from beneficiaries in one place.
           </p>
@@ -268,7 +268,8 @@ export default function MemberDashboard() {
           </div>
         </section>
       </div>
-
+      
+      <div className="dashboard-columns">
       <section className="dashboard-panel">
         <div className="dashboard-panel__header">
           <h2>Create a Meal Offering</h2>
@@ -360,10 +361,6 @@ export default function MemberDashboard() {
             </>
           )}
         </form>
-
-        <p className="dashboard-meta dashboard-meta--accent">
-          You currently have {meals.length} meals listed.
-        </p>
       </section>
 
       <section className="dashboard-panel">
@@ -372,6 +369,10 @@ export default function MemberDashboard() {
           <p className="dashboard-panel__subtitle">
             Manage the meals you have shared with the community. Edit details or remove listings that are no longer available.
           </p>
+
+          <p className="dashboard-meta dashboard-meta--accent">
+          You currently have {meals.length} meals listed.
+        </p>
         </div>
         {memberMeals.length === 0 ? (
           <p className="dashboard-orders__empty">You have not listed any meals yet.</p>
@@ -402,6 +403,7 @@ export default function MemberDashboard() {
           </ul>
         )}
       </section>
+    </div>
     </div>
   );
 };
