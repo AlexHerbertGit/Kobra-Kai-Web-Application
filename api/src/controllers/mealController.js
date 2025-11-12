@@ -55,18 +55,16 @@ export async function updateMeal(req, res) {
   if (!meal) return res.status(404).json({ message: 'Meal not found' });
   if (meal.memberId.toString() !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
 
-  const { title, description, dietaryTags, qtyAvailable } = req.body;
+  const { title, description, dietaryTags, qtyAvailable, tokenValue } = req.body;
   if (title !== undefined) meal.title = title;
   if (description !== undefined) meal.description = description;
   if (dietaryTags !== undefined) meal.dietaryTags = dietaryTags;
   if (qtyAvailable !== undefined) meal.qtyAvailable = qtyAvailable;
   if (tokenValue !== undefined) {
-    const normalized = Number.isFinite(tokenValue) ? tokenValue : Number(tokenValue);
-    if (Number.isFinite(normalized)) {
-      meal.tokenValue = normalized;
-    }
+    const normalizedTokenValue = Number.isFinite(tokenValue) ? tokenValue : Number(tokenValue);
+    meal.tokenValue = Number.isFinite(normalizedTokenValue) ? normalizedTokenValue : 1;
   }
-  
+
   await meal.save();
   res.json(meal);
 }
