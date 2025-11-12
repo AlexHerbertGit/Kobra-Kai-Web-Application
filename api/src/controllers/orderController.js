@@ -48,14 +48,44 @@ export async function placeOrder(req, res) {
   }
 }
 
-// acceptOrder Function - Used by Member users to accept pending meal requests.
-export async function acceptOrder(req, res) {
+// moveOrderToCurrent Function - Used by Member users to accept pending meal requests and mark them as current.
+export async function moveOrderToCurrent(req, res) {
   const { id } = req.params;
   const order = await Order.findById(id);
   if (!order) return res.status(404).json({ message: 'Order not found' });
-  if (order.memberId.toString() !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
 
-  order.status = 'accepted';
+  const isMember = order.memberId.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+  if (!isMember && !isAdmin) return res.status(403).json({ message: 'Forbidden' });
+
+  if (order.status !== 'pending') {
+    return res.status(400).json({ message: 'Only pending orders can be moved to current' });
+  }
+
+  order.status = 'current';
+  await order.save();
+  res.json(order);
+}
+
+// completeOrder Function - Allows members or beneficiaries to mark a current order as completed.
+export async function completeOrder(req, res) {
+  const { id } = req.params;
+  const order = await Order.findById(id);
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+
+  const isMember = order.memberId.toString() === req.user.id;
+  const isBeneficiary = order.beneficiaryId.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+  if (!isMember && !isBeneficiary && !isAdmin) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  if (!['current', 'inProgress', 'accepted'].includes(order.status)) {
+    return res.status(400).json({ message: 'Only current orders can be marked as completed' });
+  }
+
+  order.status = 'completed';
+
   await order.save();
   res.json(order);
 }

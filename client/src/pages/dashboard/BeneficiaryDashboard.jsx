@@ -19,10 +19,31 @@ export default function BeneficiaryDashboard() {
     }
   }, [user]);
 
-  async function order(mealId){
-    await api.placeOrder(mealId);
-    setOrders(await api.listOrders());
+  async function loadOrders() {
+    const data = await api.listOrders();
+    setOrders(data);
   }
+
+  async function order(mealId) {
+    await api.placeOrder(mealId);
+    await loadOrders();
+  }
+
+  async function markCompleted(orderId) {
+    await api.completeOrder(orderId);
+    await loadOrders();
+
+  const pendingOrders = orders.filter(o => o.status === 'pending');
+  const currentOrders = orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status));
+  const completedOrders = orders.filter(o => o.status === 'completed');
+  const statusLabels = {
+    pending: 'Pending',
+    current: 'Current',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    inProgress: 'In Progress',
+    accepted: 'Current'
+  };
 
   async function submitProfile(e) {
     e.preventDefault();
@@ -94,12 +115,49 @@ export default function BeneficiaryDashboard() {
 
       <div className="card">
         <h3>Your Orders</h3>
-        <ul>
-          {orders.map(o => (
-            <li key={o._id}>{o.mealId?.title ?? 'Meal'} — <b>{o.status}</b></li>
-          ))}
-        </ul>
+        {[{
+          title: 'Pending',
+          orders: pendingOrders,
+          empty: 'No pending orders. Explore meals to place a new order.'
+        }, {
+          title: 'Current',
+          orders: currentOrders,
+          empty: 'No current orders. Pending orders will appear here once accepted.',
+          actionLabel: 'Confirm Pickup',
+          onAction: markCompleted
+        }, {
+          title: 'Completed',
+          orders: completedOrders,
+          empty: 'No completed orders yet.'
+        }].map(section => (
+          <div key={section.title} style={{ marginTop: '1rem' }}>
+            <h4 style={{ marginBottom: '0.5rem' }}>{section.title}</h4>
+            {section.orders.length === 0 ? (
+              <p style={{ margin: 0, color: '#666' }}>{section.empty}</p>
+            ) : (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {section.orders.map(o => (
+                  <li key={o._id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.5rem 0',
+                    borderBottom: '1px solid #eee'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{o.mealId?.title ?? 'Meal'}</div>
+                      <div style={{ fontSize: '0.85rem', color: '#555' }}>{statusLabels[o.status] ?? o.status}</div>
+                    </div>
+                    {section.onAction && (
+                      <button className="btn" onClick={() => section.onAction(o._id)}>{section.actionLabel}</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
-}
+}};

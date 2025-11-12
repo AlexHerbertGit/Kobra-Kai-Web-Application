@@ -40,7 +40,8 @@ export const api = {
   // orders
   listOrders: () => request('/orders'),
   placeOrder: (mealId) => request('/orders', { method:'POST', body:{ mealId } }),
-   acceptOrder: (id) => request(`/orders/${id}/accept`, { method:'POST' }),
+  moveOrderToCurrent: (id) => request(`/orders/${id}/current`, { method:'POST' }),
+  completeOrder: (id) => request(`/orders/${id}/completed`, { method:'POST' }),
 
   // notifications
   savePushSubscription: (payload) => request('/notifications/subscriptions', { method: 'POST', body: payload })

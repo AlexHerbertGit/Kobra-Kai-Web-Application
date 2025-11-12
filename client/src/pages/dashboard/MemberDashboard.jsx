@@ -26,6 +26,12 @@ export default function MemberDashboard() {
     setForm({ title:'', description:'', qtyAvailable:1, dietaryTags:[] });
   }
 
+  async function loadOrders() {
+    const data = await api.listOrders();
+    setOrders(data);
+  }
+
+
   async function submitProfile(e) {
     e.preventDefault();
     setSaving(true);
@@ -41,9 +47,27 @@ export default function MemberDashboard() {
   }
 
   async function accept(id){
-    await api.acceptOrder(id);
-    setOrders(await api.listOrders());
+    await api.moveOrderToCurrent(id);
+    await loadOrders();
   }
+
+  async function complete(id) {
+    await api.completeOrder(id);
+    await loadOrders();
+  }
+
+  const pendingOrders = orders.filter(o => o.status === 'pending');
+  const currentOrders = orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status));
+  const completedOrders = orders.filter(o => o.status === 'completed');
+  const statusLabels = {
+    pending: 'Pending',
+    current: 'Current',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    inProgress: 'In Progress',
+    accepted: 'Current'
+  };
+
 
   return (
     <div className="grid">
@@ -96,14 +120,50 @@ export default function MemberDashboard() {
 
       <div className="card">
         <h3>Your Orders</h3>
-        <ul>
-          {orders.map(o => (
-            <li key={o._id}>
-              {o.mealId?.title ?? 'Meal'} — <b>{o.status}</b>
-              {o.status === 'pending' && <button className="btn" style={{marginLeft:8}} onClick={()=>accept(o._id)}>Accept</button>}
-            </li>
-          ))}
-        </ul>
+         {[{
+          title: 'Pending',
+          orders: pendingOrders,
+          empty: 'No pending orders waiting for approval.',
+          actionLabel: 'Accept Order',
+          onAction: accept
+        }, {
+          title: 'Current',
+          orders: currentOrders,
+          empty: 'No meals are currently being prepared.',
+          actionLabel: 'Mark Completed',
+          onAction: complete
+        }, {
+          title: 'Completed',
+          orders: completedOrders,
+          empty: 'No completed orders yet.'
+        }].map(section => (
+          <div key={section.title} style={{ marginTop: '1rem' }}>
+            <h4 style={{ marginBottom: '0.5rem' }}>{section.title}</h4>
+            {section.orders.length === 0 ? (
+              <p style={{ margin: 0, color: '#666' }}>{section.empty}</p>
+            ) : (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {section.orders.map(o => (
+                  <li key={o._id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.5rem 0',
+                    borderBottom: '1px solid #eee'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{o.mealId?.title ?? 'Meal'}</div>
+                      <div style={{ fontSize: '0.85rem', color: '#555' }}>{statusLabels[o.status] ?? o.status}</div>
+                    </div>
+                    {section.onAction && (
+                      <button className="btn" onClick={() => section.onAction(o._id)}>{section.actionLabel}</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { placeOrder, acceptOrder, listOrders } from '../controllers/orderController.js';
+import { placeOrder, moveOrderToCurrent, completeOrder, listOrders } from '../controllers/orderController.js';
 
 const router = Router();
 
@@ -15,10 +15,23 @@ router.post('/',
   placeOrder
 );
 
-// POST Accept Order (Member)
+// POST Move Order to Current (Member)
+router.post('/:id/current',
+  requireAuth, requireRole('member', 'admin'),
+  moveOrderToCurrent
+);
+
+// Legacy endpoint support for clients still calling /accept
 router.post('/:id/accept',
   requireAuth, requireRole('member', 'admin'),
-  acceptOrder
+    moveOrderToCurrent
 );
+
+// POST Mark Order as Completed (Member/Beneficiary)
+router.post('/:id/completed',
+  requireAuth, requireRole('member', 'beneficiary', 'admin'),
+  completeOrder
+);
+
 
 export default router;
