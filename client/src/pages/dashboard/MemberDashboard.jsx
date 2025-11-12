@@ -3,6 +3,16 @@ import { api } from '../../lib/api.js';
 import EnableNotifications from '../../components/EnableNotifications.jsx';
 import { useAuth } from '../../state/AuthContext.jsx';
 
+const DIETARY_TAG_OPTIONS = [
+  'Vegetarian',
+  'Vegan',
+  'Gluten-Free',
+  'Dairy-Free',
+  'Nut-Free',
+  'Halal',
+  'Kosher'
+];
+
 export default function MemberDashboard() {
   const { user, updateProfile } = useAuth();
   const [form, setForm] = useState({ title: '', description: '', qtyAvailable: 1, dietaryTags: [] });
@@ -156,7 +166,7 @@ export default function MemberDashboard() {
               required
             />
 
-            <button className="btn btn--primary" disabled={saving}>
+            <button className="btn" disabled={saving}>
               {saving ? 'Saving…' : 'Save Profile'}
             </button>
           </form>
@@ -263,6 +273,33 @@ export default function MemberDashboard() {
               onChange={e => setForm({ ...form, qtyAvailable: e.target.value })}
             />
           </div>
+
+          <fieldset className="dashboard-tag-selector">
+            <legend>Dietary Tags</legend>
+            <div className="dashboard-tag-selector__options">
+              {DIETARY_TAG_OPTIONS.map(tag => {
+                const checked = form.dietaryTags.includes(tag);
+                return (
+                  <label key={tag} className="dashboard-tag-selector__option">
+                    <input
+                      type="checkbox"
+                      value={tag}
+                      checked={checked}
+                      onChange={() =>
+                        setForm(current => {
+                          const tags = current.dietaryTags.includes(tag)
+                            ? current.dietaryTags.filter(t => t !== tag)
+                            : [...current.dietaryTags, tag];
+                          return { ...current, dietaryTags: tags };
+                        })
+                      }
+                    />
+                    <span>{tag}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
           <button className="btn" type="submit">
             Create Meal

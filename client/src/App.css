@@ -128,7 +128,8 @@ a {
     border-radius:8px; background:#1f2937; 
     color: white;  
     cursor:pointer;
-    width: 10%; 
+    width: 150px;
+    font-family: var(--font-heading); 
 }
 
 .btn:hover { 
@@ -387,7 +388,7 @@ a {
 }
 
 
-/* Button variant (green like your mock) */
+/* Button variant */
 .btn--primary {
   background: var(--clr-success);
   border: none;
@@ -621,7 +622,7 @@ a {
 }
 
 .dashboard-form .input {
-  width: 80%;
+  width: 50%;
   padding: 0.75rem 0.9rem;
   border-radius: 12px;
   border: 1px solid rgba(2, 2, 2, 0.6);
@@ -653,6 +654,42 @@ a {
   gap: 1.25rem;
 }
 
+.dashboard-tag-selector {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.dashboard-tag-selector legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--clr-text);
+  padding: 0;
+}
+
+.dashboard-tag-selector__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dashboard-tag-selector__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(124, 165, 73, 0.16);
+  color: var(--clr-text);
+  font-size: 0.9rem;
+}
+
+.dashboard-tag-selector__option input {
+  accent-color: var(--clr-primary);
+}
 
 .dashboard-orders__group {
   display: grid;

@@ -24,7 +24,7 @@ export default function EnableNotifications({ className }) {
   };
 
   const disabled = status === 'loading' || status === 'success';
-  const label = status === 'success' ? 'Notifications enabled' : 'Enable notifications';
+  const label = status === 'success' ? 'Notifications Enabled' : 'Enable Notifications';
 
   return (
     <div className={className}>
