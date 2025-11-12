@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../state/AuthContext.jsx';
 import { api } from '../../lib/api.js';
 import EnableNotifications from '../../components/EnableNotifications.jsx';
@@ -40,9 +40,13 @@ export default function BeneficiaryDashboard() {
     await loadOrders();
   }
 
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const currentOrders = orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status));
-  const completedOrders = orders.filter(o => o.status === 'completed');
+  const pendingOrders = useMemo(() => orders.filter(o => o.status === 'pending'), [orders]);
+  const currentOrders = useMemo(
+    () => orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status)),
+    [orders]
+  );
+  const completedOrders = useMemo(() => orders.filter(o => o.status === 'completed'), [orders]);
+
   const statusLabels = {
     pending: 'Pending',
     current: 'Current',
@@ -73,7 +77,7 @@ export default function BeneficiaryDashboard() {
       empty: 'No pending orders. Explore meals to place a new order.'
     },
     {
-      title: 'Current',
+      title: 'In Progress',
       orders: currentOrders,
       empty: 'No current orders. Pending orders will appear here once accepted.',
       actionLabel: 'Confirm Pickup',
@@ -87,71 +91,119 @@ export default function BeneficiaryDashboard() {
   ];
 
   return (
-    <div className="dashboard-grid">
-      <section className="card dashboard-section">
-        <h2>Beneficiary Dashboard</h2>
-        <p>
-          Token Balance: <b>{user?.tokenBalance}</b>
-        </p>
-        <EnableNotifications />
-      </section>
-
-      <section className="card dashboard-section">
-        <h3>Your Profile</h3>
-        <p><strong>Email:</strong> {user?.email}</p>
-        <form className="grid" onSubmit={submitProfile}>
-          <label htmlFor="profile-name">Name</label>
-          <input
-            id="profile-name"
-            className="input"
-            value={profile.name}
-            onChange={e => setProfile({ ...profile, name: e.target.value })}
-            minLength={2}
-            required
-          />
-          <label htmlFor="profile-address">Address</label>
-          <textarea
-            id="profile-address"
-            className="input"
-            value={profile.address}
-            onChange={e => setProfile({ ...profile, address: e.target.value })}
-            minLength={10}
-            required
-          />
-          <button className="btn" disabled={saving}>{saving ? 'Saving…' : 'Save Profile'}</button>
-        </form>
-        {status.type && (
-          <p style={{ color: status.type === 'error' ? 'var(--color-error, #b00020)' : 'var(--color-success, #0a7d00)', marginTop: '0.5rem' }}>
-            {status.message}
+    <div className="dashboard">
+      <header className="dashboard-hero">
+        <div className="dashboard-hero__content">
+          <h1 className="dashboard-hero__title">Account Dashboard</h1>
+          <p className="dashboard-hero__text">
+            Update your account details, review your order history, and explore the latest meals available to you.
           </p>
-        )}
-      </section>
+        </div>
+      </header>
 
-      <section className="card dashboard-section">
-        <h3>Your Orders</h3>
-        {orderSections.map(section => (
-          <div key={section.title} className="orders-section">
-            <h4 className="orders-section__title">{section.title}</h4>
-            {section.orders.length === 0 ? (
-              <p className="orders-section__empty">{section.empty}</p>
-            ) : (
-              <ul className="orders-list">
-                {section.orders.map(o => (
-                   <li key={o._id} className="orders-list__item">
-                    <div>
-                      <div className="orders-list__item-title">{o.mealId?.title ?? 'Meal'}</div>
-                      <div className="orders-list__item-status">{statusLabels[o.status] ?? o.status}</div>
-                    </div>
-                    {section.onAction && (
-                      <button className="btn" onClick={() => section.onAction(o._id)}>{section.actionLabel}</button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+      <div className="dashboard-columns">
+        <section className="dashboard-panel">
+          <div className="dashboard-panel__header">
+            <h2>Account Details</h2>
+            <p className="dashboard-panel__subtitle">
+              Update your details by completing the form fields and clicking the Update Account Details button.
+            </p>
           </div>
-        ))}
-    </section>
-  </div>
+
+      <div className="dashboard-token">
+            <h3 className="dashboard-token__label">Token Balance</h3>
+            <p className="dashboard-token__value">{user?.tokenBalance ?? 0}</p>
+            <EnableNotifications />
+          </div>
+
+          <p className="dashboard-meta">
+            <strong>Email:</strong> {user?.email}
+          </p>
+      
+       <form className="dashboard-form" onSubmit={submitProfile}>
+            <label className="dashboard-form__label" htmlFor="profile-name">
+              Name
+            </label>
+            <input
+              id="profile-name"
+              className="input"
+              value={profile.name}
+              onChange={e => setProfile({ ...profile, name: e.target.value })}
+              minLength={2}
+              required
+            />
+
+            <label className="dashboard-form__label" htmlFor="profile-address">
+              Address
+            </label>
+            <textarea
+              id="profile-address"
+              className="input"
+              value={profile.address}
+              onChange={e => setProfile({ ...profile, address: e.target.value })}
+              minLength={10}
+              required
+            />
+
+            <button className="btn btn--primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Update Account Details'}
+            </button>
+          </form>
+
+          {status.type && (
+            <p
+              className={`dashboard-alert ${
+                status.type === 'error' ? 'dashboard-alert--error' : 'dashboard-alert--success'
+              }`}
+            >
+              {status.message}
+            </p>
+          )}
+        </section>
+
+        <section className="dashboard-panel">
+          <div className="dashboard-panel__header">
+            <h2>Order History</h2>
+            <p className="dashboard-panel__subtitle">
+              Track each stage of your meal requests and confirm pickups when you’ve collected your meals.
+            </p>
+          </div>
+
+          <div className="dashboard-orders">
+            {orderSections.map(section => (
+              <div key={section.title} className="dashboard-orders__group">
+                <div className="dashboard-orders__group-header">
+                  <h3>{section.title}</h3>
+                  <span className="dashboard-orders__count">{section.orders.length}</span>
+                </div>
+                {section.orders.length === 0 ? (
+                  <p className="dashboard-orders__empty">{section.empty}</p>
+                ) : (
+                  <ul className="dashboard-orders__list">
+                    {section.orders.map(orderItem => (
+                      <li key={orderItem._id} className="dashboard-orders__item">
+                        <div className="dashboard-orders__item-info">
+                          <h4>{orderItem.mealId?.title ?? 'Meal'}</h4>
+                          <p>{statusLabels[orderItem.status] ?? orderItem.status}</p>
+                        </div>
+                        {section.onAction && (
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => section.onAction(orderItem._id)}
+                          >
+                            {section.actionLabel}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };

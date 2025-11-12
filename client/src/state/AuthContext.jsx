@@ -12,22 +12,22 @@ function normalizeUser(user) {
   return { ...user, role };
 }
 
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
 
-  const setNormalizedUser = (value) => {
+  const setNormalizedUser = value => {
     if (typeof value === 'function') {
-      setUser((prev) => normalizeUser(value(prev)));
+      setUser(prev => normalizeUser(value(prev)));
     } else {
       setUser(normalizeUser(value));
     }
   };
 
   useEffect(() => {
-    api.me()
-      .then((u) => setNormalizedUser(u))
+    api
+      .me()
+      .then(u => setNormalizedUser(u))
       .catch(() => setNormalizedUser(null))
       .finally(() => setReady(true));
     }, []);
@@ -39,16 +39,19 @@ export function AuthProvider({ children }) {
     return normalized;
   };
 
-  const register = async (payload) => {
+  const register = async payload => {
     const u = await api.register(payload);
     const normalized = normalizeUser(u);
     setNormalizedUser(normalized);
     return normalized;
   };
 
-  const logout = async () => { await api.logout(); setNormalizedUser(null); };
+  const logout = async () => {
+    await api.logout();
+    setNormalizedUser(null);
+  };
 
-  const updateProfile = async (payload) => {
+  const updateProfile = async payload => {
     const updated = await api.updateMe(payload);
     const normalized = normalizeUser(updated);
     setNormalizedUser(normalized);
@@ -56,10 +59,8 @@ export function AuthProvider({ children }) {
   };
 
    return (
-    <AuthCtx.Provider
-      value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}
-    >
-      {children}
-    </AuthCtx.Provider>
+      <AuthCtx.Provider value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}>
+        {children}
+      </AuthCtx.Provider>
   );
 }

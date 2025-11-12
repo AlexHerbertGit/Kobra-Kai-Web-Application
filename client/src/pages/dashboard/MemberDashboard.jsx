@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api.js';
 import EnableNotifications from '../../components/EnableNotifications.jsx';
 import { useAuth } from '../../state/AuthContext.jsx';
@@ -28,7 +28,7 @@ export default function MemberDashboard() {
 
   async function createMeal(e) {
     e.preventDefault();
-     await api.createMeal({
+    await api.createMeal({
       ...form,
       qtyAvailable: Number(form.qtyAvailable),
       dietaryTags: form.dietaryTags || []
@@ -57,7 +57,7 @@ export default function MemberDashboard() {
     }
   }
 
-   async function accept(id) {
+  async function accept(id) {
     await api.moveOrderToCurrent(id);
     await loadOrders();
   }
@@ -67,12 +67,16 @@ export default function MemberDashboard() {
     await loadOrders();
   }
 
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const currentOrders = orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status));
-  const completedOrders = orders.filter(o => o.status === 'completed');
+  const pendingOrders = useMemo(() => orders.filter(o => o.status === 'pending'), [orders]);
+  const currentOrders = useMemo(
+    () => orders.filter(o => ['current', 'inProgress', 'accepted'].includes(o.status)),
+    [orders]
+  );
+  const completedOrders = useMemo(() => orders.filter(o => o.status === 'completed'), [orders]);
+
   const statusLabels = {
     pending: 'Pending',
-    current: 'Current',
+    current: 'In Progress',
     completed: 'Completed',
     cancelled: 'Cancelled',
     inProgress: 'In Progress',
@@ -81,7 +85,7 @@ export default function MemberDashboard() {
 
   const orderSections = [
     {
-      title: 'Pending',
+      title: 'Pending Approval',
       orders: pendingOrders,
       empty: 'No pending orders waiting for approval.',
       actionLabel: 'Accept Order',
@@ -102,106 +106,172 @@ export default function MemberDashboard() {
   ];
 
   return (
-    <div className="dashboard-grid">
-      <section className="card dashboard-section">
-        <h2>Member Dashboard</h2>
-        <EnableNotifications />
-        <form onSubmit={createMeal} className="grid">
-          <label htmlFor="meal-title">Title</label>
-          <input
-            id="meal-title"
-            className="input"
-            value={form.title}
-            onChange={e => setForm({ ...form, title: e.target.value })}
-            required
-          />
-          <label htmlFor="meal-description">Description</label>
-          <textarea
-            id="meal-description"
-            className="input"
-            value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-          />
-          <label htmlFor="meal-qty">Qty Available</label>
-          <input
-            id="meal-qty"
-            className="input"
-            type="number"
-            min="0"
-            value={form.qtyAvailable}
-            onChange={e => setForm({ ...form, qtyAvailable: e.target.value })}
-          />
-          <button className="btn">Create Meal</button>
-        </form>
-         <p className="dashboard-subtext">You currently have {meals.length} meals listed.</p>
-      </section>
+    <div className="dashboard">
+      <header className="dashboard-hero">
+        <div className="dashboard-hero__content">
+          <h1 className="dashboard-hero__title">Account Dashboard</h1>
+          <p className="dashboard-hero__text">
+            Coordinate meal donations, keep your profile up to date, and manage orders from beneficiaries in one place.
+          </p>
+        </div>
+      </header>
 
-       <section className="card dashboard-section">
-        <h3>Your Profile</h3>
-        <p>
-          <strong>Email:</strong> {user?.email}
-        </p>
-        <form className="grid" onSubmit={submitProfile}>
-          <label htmlFor="member-profile-name">Name</label>
-          <input
-            id="member-profile-name"
-            className="input"
-            value={profile.name}
-            onChange={e => setProfile({ ...profile, name: e.target.value })}
-            minLength={2}
-            required
-          />
-          <label htmlFor="member-profile-address">Address</label>
-          <textarea
-            id="member-profile-address"
-            className="input"
-            value={profile.address}
-            onChange={e => setProfile({ ...profile, address: e.target.value })}
-            minLength={10}
-            required
-          />
-          <button className="btn" disabled={saving}>
-            {saving ? 'Saving…' : 'Save Profile'}
+       <div className="dashboard-columns">
+        <section className="dashboard-panel">
+          <div className="dashboard-panel__header">
+            <h2>Account Details</h2>
+            <p className="dashboard-panel__subtitle">
+              Let beneficiaries know who their meals are coming from. Update your details and contact information here.
+            </p>
+          </div>
+
+          <EnableNotifications />
+
+          <p className="dashboard-meta">
+            <strong>Email:</strong> {user?.email}
+          </p>
+
+        <form className="dashboard-form" onSubmit={submitProfile}>
+            <label className="dashboard-form__label" htmlFor="member-profile-name">
+              Name
+            </label>
+            <input
+              id="member-profile-name"
+              className="input"
+              value={profile.name}
+              onChange={e => setProfile({ ...profile, name: e.target.value })}
+              minLength={2}
+              required
+            />
+
+            <label className="dashboard-form__label" htmlFor="member-profile-address">
+              Address
+            </label>
+            <textarea
+              id="member-profile-address"
+              className="input"
+              value={profile.address}
+              onChange={e => setProfile({ ...profile, address: e.target.value })}
+              minLength={10}
+              required
+            />
+
+            <button className="btn btn--primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Save Profile'}
+            </button>
+          </form>
+
+          {status.type && (
+            <p
+              className={`dashboard-alert ${
+                status.type === 'error' ? 'dashboard-alert--error' : 'dashboard-alert--success'
+              }`}
+            >
+              {status.message}
+            </p>
+          )}
+        </section>
+
+      <section className="dashboard-panel">
+          <div className="dashboard-panel__header">
+            <h2>Order Management</h2>
+            <p className="dashboard-panel__subtitle">
+              Monitor beneficiary requests, accept orders to begin preparing meals, and mark them complete when fulfilled.
+            </p>
+          </div>
+      
+       <div className="dashboard-orders">
+            {orderSections.map(section => (
+              <div key={section.title} className="dashboard-orders__group">
+                <div className="dashboard-orders__group-header">
+                  <h3>{section.title}</h3>
+                  <span className="dashboard-orders__count">{section.orders.length}</span>
+                </div>
+                {section.orders.length === 0 ? (
+                  <p className="dashboard-orders__empty">{section.empty}</p>
+                ) : (
+                  <ul className="dashboard-orders__list">
+                    {section.orders.map(orderItem => (
+                      <li key={orderItem._id} className="dashboard-orders__item">
+                        <div className="dashboard-orders__item-info">
+                          <h4>{orderItem.mealId?.title ?? 'Meal'}</h4>
+                          <p>{statusLabels[orderItem.status] ?? orderItem.status}</p>
+                        </div>
+                        {section.onAction && (
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => section.onAction(orderItem._id)}
+                          >
+                            {section.actionLabel}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="dashboard-panel">
+        <div className="dashboard-panel__header">
+          <h2>Create a Meal Offering</h2>
+          <p className="dashboard-panel__subtitle">
+            Share what you’re preparing so beneficiaries can reserve meals. Include enticing descriptions and available portions.
+          </p>
+        </div>
+
+        <form onSubmit={createMeal} className="dashboard-form ">
+          <div className="dashboard-form__group">
+            <label className="dashboard-form__label" htmlFor="meal-title">
+              Title
+            </label>
+            <input
+              id="meal-title"
+              className="input"
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="dashboard-form__group">
+            <label className="dashboard-form__label" htmlFor="meal-description">
+              Description
+            </label>
+            <textarea
+              id="meal-description"
+              className="input"
+              value={form.description}
+              onChange={e => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+
+          <div className="dashboard-form__group dashboard-form__group--compact">
+            <label className="dashboard-form__label" htmlFor="meal-qty">
+              Portions Available
+            </label>
+            <input
+              id="meal-qty"
+              className="input"
+              type="number"
+              min="0"
+              value={form.qtyAvailable}
+              onChange={e => setForm({ ...form, qtyAvailable: e.target.value })}
+            />
+          </div>
+
+          <button className="btn" type="submit">
+            Create Meal
           </button>
         </form>
-        {status.type && (
-          <p
-            className={`dashboard-status ${
-              status.type === 'error' ? 'dashboard-status--error' : 'dashboard-status--success'
-            }`}
-          >
-            {status.message}
-          </p>
-        )}
-      </section>
 
-
-      <section className="card dashboard-section">
-        <h3>Your Orders</h3>
-         {orderSections.map(section => (
-          <div key={section.title} className="orders-section">
-            <h4 className="orders-section__title">{section.title}</h4>
-            {section.orders.length === 0 ? (
-              <p className="orders-section__empty">{section.empty}</p>
-            ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {section.orders.map(o => (
-                  <li key={o._id} className="orders-list__item">
-                    <div>
-                      <div className="orders-list__item-title">{o.mealId?.title ?? 'Meal'}</div>
-                      <div className="orders-list__item-status">{statusLabels[o.status] ?? o.status}</div>
-                    </div>
-                    {section.onAction && (
-                      <button className="btn" onClick={() => section.onAction(o._id)}>
-                        {section.actionLabel}
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+        <p className="dashboard-meta dashboard-meta--accent">
+          You currently have {meals.length} meals listed.
+        </p>
       </section>
     </div>
   );
