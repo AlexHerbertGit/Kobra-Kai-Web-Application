@@ -1,5 +1,9 @@
 // Service Worker for PWA and Push Notifications 
 
+import { precacheAndRoute } from 'workbox-precaching';
+
+precacheAndRoute(self.__WB_MANIFEST);
+
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting());
 });
