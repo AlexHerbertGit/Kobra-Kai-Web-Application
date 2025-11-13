@@ -3,13 +3,17 @@ import { serviceWorkerRegistrationPromise } from '../main.jsx';
 const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
 function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = atob(base64);
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; i += 1) {
     outputArray[i] = rawData.charCodeAt(i);
   }
+  for (let index = 0; index < rawData.length; index += 1) {
+    outputArray[index] = rawData.charCodeAt(index);
+  }
+
   return outputArray;
 }
 
@@ -22,20 +26,25 @@ async function waitForServiceWorkerRegistration(timeoutMs = 5000) {
     serviceWorkerRegistrationPromise &&
     typeof serviceWorkerRegistrationPromise.then === 'function'
   ) {
-    registrationCandidates.push(
-      serviceWorkerRegistrationPromise.then((registration) => registration)
+  registrationCandidates.push(
+     serviceWorkerRegistrationPromise.catch((error) => {
+        throw error;
+      }),
     );
   }
 
-  registrationCandidates.push(navigator.serviceWorker.ready);
+  if ('serviceWorker' in navigator) {
+    registrationCandidates.push(
+      navigator.serviceWorker.ready.catch((error) => {
+        throw error;
+      }),
+    );
+  }
 
   try {
     const registrationCandidate = await Promise.race([
-      ...registrationCandidates.map((candidate) =>
-        candidate.catch((error) => {
-          throw error;
-        })
-      ),
+      pollForRegistration,
+       ...registrationCandidates,
       new Promise((_, reject) => {
         timeoutId = window.setTimeout(() => {
           reject(new Error('Service worker did not become ready in time.'));
@@ -74,7 +83,7 @@ export async function subscribeToPush() {
     throw new Error('Notification permission was not granted.');
   }
 
-  const existingRegistration = await waitForServiceWorkerRegistration();;
+  const existingRegistration = await waitForServiceWorkerRegistration();
   if (!existingRegistration) {
     throw new Error('No service worker registration is available.');
   }
@@ -85,7 +94,7 @@ export async function subscribeToPush() {
     let timeoutId;
     try {
       const readyPromise = navigator.serviceWorker.ready.then((readyRegistration) => {
-        clearTimeout(timeoutId);
+        window.clearTimeout(timeoutId);
         return readyRegistration;
       });
 
@@ -97,13 +106,13 @@ export async function subscribeToPush() {
 
       registration = await Promise.race([readyPromise, timeoutPromise]);
     } finally {
-      clearTimeout(timeoutId);
+      window.clearTimeout(timeoutId);
     }
   }
 
-  const existing = await registration.pushManager.getSubscription();
-  if (existing) {
-    return existing.toJSON();
+  const existingSubscription = await registration.pushManager.getSubscription();
+  if (existingSubscription) {
+    return existingSubscription.toJSON();
   }
 
   if (!VAPID_KEY) {
@@ -116,4 +125,4 @@ export async function subscribeToPush() {
   });
 
   return subscription.toJSON();
-}
+};
