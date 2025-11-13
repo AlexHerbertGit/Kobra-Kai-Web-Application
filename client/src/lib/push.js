@@ -14,8 +14,52 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-async function waitForServiceWorkerRegistration(timeoutMs = 5000) {
-  let timeoutId;
+class TimeoutError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'TimeoutError';
+  }
+}
+
+function withTimeout(promise, timeoutMs) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return promise;
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new TimeoutError('Operation timed out.'));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
+async function waitForServiceWorkerRegistration({
+  timeoutMs = 20000,
+  pollIntervalMs = 300,
+} = {}) {
+  if (!('serviceWorker' in navigator)) {
+    throw new Error('Service workers are not available.');
+  }
+
+  const startTime = Date.now();
+
+  const remainingTimeout = () => timeoutMs - (Date.now() - startTime);
+
+  const immediateRegistration = await navigator.serviceWorker.getRegistration();
+  if (immediateRegistration) {
+    return immediateRegistration;
+  }
+
 
   const registrationCandidates = [];
 
@@ -23,49 +67,39 @@ async function waitForServiceWorkerRegistration(timeoutMs = 5000) {
     serviceWorkerRegistrationPromise &&
     typeof serviceWorkerRegistrationPromise.then === 'function'
   ) {
-    registrationCandidates.push(
-      serviceWorkerRegistrationPromise.catch((error) => {
-        throw error;
-      }),
-    );
+    registrationCandidates.push(serviceWorkerRegistrationPromise);
   }
 
-  if ('serviceWorker' in navigator) {
-    registrationCandidates.push(
-      navigator.serviceWorker.ready.catch((error) => {
-        throw error;
-      }),
-    );
-  }
+  registrationCandidates.push(navigator.serviceWorker.ready);
 
-  if (registrationCandidates.length === 0) {
-    throw new Error('No service worker registration candidates are available.');
-  }
-
-  try {
-    const registrationCandidate = await Promise.race([
-       ...registrationCandidates,
-      new Promise((_, reject) => {
-        timeoutId = window.setTimeout(() => {
-          reject(new Error('Service worker did not become ready in time.'));
-        }, timeoutMs);
-      }),
-    ]);
-
-    const registration =
-      registrationCandidate ||
-      ('serviceWorker' in navigator
-        ? await navigator.serviceWorker.getRegistration()
-        : null);
-
-    if (!registration) {
-      throw new Error('No service worker registration is available.');
+  for (const candidate of registrationCandidates) {
+    if (remainingTimeout() <= 0) {
+      break;
     }
 
-    return registration;
-  } finally {
-    window.clearTimeout(timeoutId);
+    try {
+      const registration = await withTimeout(candidate, remainingTimeout());
+      if (registration) {
+        return registration;
+      }
+
+    } catch (error) {
+      if (!(error instanceof TimeoutError)) {
+        console.warn('Service worker candidate failed to resolve.', error);
+      }
+    }
   }
+
+  while (remainingTimeout() > 0) {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (registration) {
+      return registration;
+  }
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, pollIntervalMs);
+    });
+  }
+    throw new Error('Service worker registration was not found in time.');
 }
 
 export async function subscribeToPush() {
