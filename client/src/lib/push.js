@@ -43,6 +43,75 @@ function withTimeout(promise, timeoutMs) {
   });
 }
 
+async function waitForActiveRegistration(registration, timeoutMs) {
+  if (!registration) {
+    return null;
+  }
+
+  if (registration.active) {
+    return registration;
+  }
+
+  const remainingTime = Number.isFinite(timeoutMs) ? Math.max(0, timeoutMs) : 0;
+
+  const statePromise = new Promise((resolve, reject) => {
+    const worker = registration.installing || registration.waiting;
+
+    if (!worker) {
+      resolve(null);
+      return;
+    }
+
+    if (worker.state === 'activated') {
+      resolve(registration);
+      return;
+    }
+
+    const timeoutId = remainingTime > 0 ? window.setTimeout(() => {
+      worker.removeEventListener('statechange', handleStateChange);
+      reject(new TimeoutError('Service worker activation timed out.'));
+    }, remainingTime) : null;
+
+    function handleStateChange() {
+      if (worker.state === 'activated') {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+        worker.removeEventListener('statechange', handleStateChange);
+        resolve(registration);
+      }
+    }
+
+    worker.addEventListener('statechange', handleStateChange);
+  });
+
+  try {
+    const result = await statePromise;
+    if (result) {
+      return result;
+    }
+  } catch (error) {
+    if (!(error instanceof TimeoutError)) {
+      throw error;
+    }
+  }
+
+  if (remainingTime > 0) {
+    try {
+      const readyRegistration = await withTimeout(navigator.serviceWorker.ready, remainingTime);
+      if (readyRegistration) {
+        return readyRegistration;
+      }
+    } catch (error) {
+      if (!(error instanceof TimeoutError)) {
+        throw error;
+      }
+    }
+  }
+
+  return registration.active ? registration : null;
+}
+
 async function waitForServiceWorkerRegistration({ timeoutMs = 20000, pollIntervalMs = 300 } = {}) {
   if (!('serviceWorker' in navigator)) {
     throw new Error('Service workers are not available.');
@@ -53,8 +122,9 @@ async function waitForServiceWorkerRegistration({ timeoutMs = 20000, pollInterva
   const remainingTimeout = () => timeoutMs - (Date.now() - startTime);
 
   const immediateRegistration = await navigator.serviceWorker.getRegistration();
-  if (immediateRegistration) {
-    return immediateRegistration;
+  const activatedImmediate = await waitForActiveRegistration(immediateRegistration, remainingTimeout());
+  if (activatedImmediate) {
+    return activatedImmediate;
   }
 
   const registrationCandidates = [];
@@ -72,8 +142,9 @@ async function waitForServiceWorkerRegistration({ timeoutMs = 20000, pollInterva
 
     try {
       const registration = await withTimeout(candidate, remainingTimeout());
-      if (registration) {
-        return registration;
+      const activatedRegistration = await waitForActiveRegistration(registration, remainingTimeout());
+      if (activatedRegistration) {
+        return activatedRegistration;
       }
 
     } catch (error) {
@@ -84,14 +155,17 @@ async function waitForServiceWorkerRegistration({ timeoutMs = 20000, pollInterva
   }
   while (remainingTimeout() > 0) {
     const registration = await navigator.serviceWorker.getRegistration();
-    if (registration) {
-      return registration;
+    const activatedRegistration = await waitForActiveRegistration(registration, remainingTimeout());
+    if (activatedRegistration) {
+      return activatedRegistration;
     }
     await new Promise((resolve) => {
       window.setTimeout(resolve, pollIntervalMs);
     });
   }
-    throw new Error('Service worker registration was not found in time.');
+    throw new Error(
+    'Service worker registration was not found in time. Ensure the app is served over HTTPS/localhost and that sw.js is available.'
+  );
 }
 
 let cachedVapidKey = null;
@@ -152,8 +226,24 @@ export async function subscribeToPush() {
     throw new Error('Push messaging is not supported in this browser.');
   }
 
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') {
+  let permissionState = Notification.permission;
+
+  if (permissionState === 'denied') {
+    throw new Error(
+      'Notifications are blocked for this site. Update your browser settings to enable notifications and try again.'
+    );
+  }
+
+  if (permissionState === 'default') {
+    try {
+      permissionState = await Notification.requestPermission();
+    } catch (error) {
+      console.error('Notification permission request failed.', error);
+      throw new Error('Unable to request notification permission.');
+    }
+  }
+
+  if (permissionState !== 'granted') {
     throw new Error('Notification permission was not granted.');
   }
 

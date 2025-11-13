@@ -18,6 +18,19 @@ export const serviceWorkerRegistrationPromise =
     : Promise.reject(new Error('Service workers are not supported in this browser.'));
 
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!navigator.serviceWorker.controller) {
+      return;
+    }
+
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        resolveServiceWorkerRegistration?.(registration);
+      })
+      .catch(() => {
+        // Ignore controller change failures; registration attempts below will surface issues.
+      });
+  });
   navigator.serviceWorker
     .getRegistration()
     .then((registration) => {
@@ -39,9 +52,19 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 
   registerSW({
     immediate: true,
-    onRegistered(registration) {
+    async onRegistered(registration) {
       if (registration) {
         resolveServiceWorkerRegistration?.(registration);
+        return;
+      }
+
+      try {
+        const lookedUpRegistration = await navigator.serviceWorker.getRegistration();
+        if (lookedUpRegistration) {
+          resolveServiceWorkerRegistration?.(lookedUpRegistration);
+        }
+      } catch (error) {
+        console.warn('Unable to resolve service worker registration after onRegistered callback.', error);
       }
     },
     onRegisterError(error) {
