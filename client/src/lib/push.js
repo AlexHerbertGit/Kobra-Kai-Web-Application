@@ -1,24 +1,24 @@
+import { API_BASE_URL } from './api.js';
 import { serviceWorkerRegistrationPromise } from '../main.jsx';
-
-const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; i += 1) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-
-  return outputArray;
-}
 
 class TimeoutError extends Error {
   constructor(message) {
     super(message);
     this.name = 'TimeoutError';
   }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; i += 1) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  return outputArray;
 }
 
 function withTimeout(promise, timeoutMs) {
@@ -43,10 +43,7 @@ function withTimeout(promise, timeoutMs) {
   });
 }
 
-async function waitForServiceWorkerRegistration({
-  timeoutMs = 20000,
-  pollIntervalMs = 300,
-} = {}) {
+async function waitForServiceWorkerRegistration({ timeoutMs = 20000, pollIntervalMs = 300 } = {}) {
   if (!('serviceWorker' in navigator)) {
     throw new Error('Service workers are not available.');
   }
@@ -62,10 +59,7 @@ async function waitForServiceWorkerRegistration({
 
   const registrationCandidates = [];
 
-  if (
-    serviceWorkerRegistrationPromise &&
-    typeof serviceWorkerRegistrationPromise.then === 'function'
-  ) {
+  if (serviceWorkerRegistrationPromise && typeof serviceWorkerRegistrationPromise.then === 'function') {
     registrationCandidates.push(serviceWorkerRegistrationPromise);
   }
 
@@ -92,12 +86,57 @@ async function waitForServiceWorkerRegistration({
     const registration = await navigator.serviceWorker.getRegistration();
     if (registration) {
       return registration;
-  }
+    }
     await new Promise((resolve) => {
       window.setTimeout(resolve, pollIntervalMs);
     });
   }
     throw new Error('Service worker registration was not found in time.');
+}
+
+let cachedVapidKey = null;
+let vapidKeyLookupPromise = null;
+
+async function fetchVapidKeyFromApi() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/push/public-key`, { credentials: 'include' });
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const key = typeof data?.key === 'string' ? data.key.trim() : '';
+    if (!key) {
+      throw new Error('Response did not include a VAPID public key.');
+    }
+
+    return key;
+  } catch (error) {
+    console.error('Failed to retrieve the VAPID public key from the API.', error);
+    throw new Error('VAPID public key is not configured.');
+  }
+}
+
+async function getVapidPublicKey() {
+  if (cachedVapidKey) {
+    return cachedVapidKey;
+  }
+
+  const envKey = typeof import.meta.env.VITE_VAPID_PUBLIC_KEY === 'string'
+    ? import.meta.env.VITE_VAPID_PUBLIC_KEY.trim()
+    : '';
+
+  if (envKey) {
+    cachedVapidKey = envKey;
+    return cachedVapidKey;
+  }
+
+  if (!vapidKeyLookupPromise) {
+    vapidKeyLookupPromise = fetchVapidKeyFromApi();
+  }
+
+  cachedVapidKey = await vapidKeyLookupPromise;
+  return cachedVapidKey;
 }
 
 export async function subscribeToPush() {
@@ -127,7 +166,7 @@ export async function subscribeToPush() {
 
   if (!registration.active && 'serviceWorker' in navigator) {
     try {
-    const readyRegistration = await navigator.serviceWorker.ready;
+      const readyRegistration = await navigator.serviceWorker.ready;
       if (readyRegistration) {
         registration = readyRegistration;
       }
@@ -141,13 +180,10 @@ export async function subscribeToPush() {
     return existingSubscription.toJSON();
   }
 
-  if (!VAPID_KEY) {
-    throw new Error('VAPID public key is not configured.');
-  }
-
+  const vapidKey = await getVapidPublicKey();
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
+    applicationServerKey: urlBase64ToUint8Array(vapidKey),
   });
 
   return subscription.toJSON();

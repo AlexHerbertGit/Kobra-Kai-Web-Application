@@ -22,10 +22,10 @@ router.post('/subscribe',
 
 router.delete('/subscribe',
   requireAuth,
-  body('endpoint').optional({ checkFalsy: true }).isString(),
+  body('endpoint').optional({ checkFalsy: true }).isString().trim(),
   async (req, res, next) => {
     if (!req.body?.endpoint && req.query?.endpoint) {
-      req.body.endpoint = String(req.query.endpoint);
+      req.body.endpoint = String(req.query.endpoint).trim();
     }
     next();
   },

@@ -1,10 +1,9 @@
 // API Connection Configuration
 
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
-
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
 
 async function request(path, { method='GET', body, headers } = {}) {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(headers||{}) },
