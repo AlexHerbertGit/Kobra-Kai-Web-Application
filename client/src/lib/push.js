@@ -1,3 +1,5 @@
+import { serviceWorkerRegistrationPromise } from '../main.jsx';
+
 const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
 function urlBase64ToUint8Array(base64String) {
@@ -9,6 +11,49 @@ function urlBase64ToUint8Array(base64String) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+}
+
+async function waitForServiceWorkerRegistration(timeoutMs = 5000) {
+  let timeoutId;
+
+  const registrationCandidates = [];
+
+  if (
+    serviceWorkerRegistrationPromise &&
+    typeof serviceWorkerRegistrationPromise.then === 'function'
+  ) {
+    registrationCandidates.push(
+      serviceWorkerRegistrationPromise.then((registration) => registration)
+    );
+  }
+
+  registrationCandidates.push(navigator.serviceWorker.ready);
+
+  try {
+    const registrationCandidate = await Promise.race([
+      ...registrationCandidates.map((candidate) =>
+        candidate.catch((error) => {
+          throw error;
+        })
+      ),
+      new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error('Service worker did not become ready in time.'));
+        }, timeoutMs);
+      }),
+    ]);
+
+    const registration =
+      registrationCandidate || (await navigator.serviceWorker.getRegistration());
+
+    if (!registration) {
+      throw new Error('No service worker registration is available.');
+    }
+
+    return registration;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 }
 
 export async function subscribeToPush() {
@@ -29,7 +74,33 @@ export async function subscribeToPush() {
     throw new Error('Notification permission was not granted.');
   }
 
-  const registration = await navigator.serviceWorker.ready;
+  const existingRegistration = await waitForServiceWorkerRegistration();;
+  if (!existingRegistration) {
+    throw new Error('No service worker registration is available.');
+  }
+
+  let registration = existingRegistration;
+
+  if (!registration.active) {
+    let timeoutId;
+    try {
+      const readyPromise = navigator.serviceWorker.ready.then((readyRegistration) => {
+        clearTimeout(timeoutId);
+        return readyRegistration;
+      });
+
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error('Service worker did not become ready in time.'));
+        }, 5000);
+      });
+
+      registration = await Promise.race([readyPromise, timeoutPromise]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   const existing = await registration.pushManager.getSubscription();
   if (existing) {
     return existing.toJSON();

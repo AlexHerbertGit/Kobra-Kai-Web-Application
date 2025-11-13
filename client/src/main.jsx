@@ -6,7 +6,52 @@ import { AuthProvider } from './state/AuthContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
 import './App.css';
 
-registerSW({ immediate: true });
+let resolveServiceWorkerRegistration;
+let rejectServiceWorkerRegistration;
+
+export const serviceWorkerRegistrationPromise =
+  typeof window !== 'undefined' && 'serviceWorker' in navigator
+    ? new Promise((resolve, reject) => {
+        resolveServiceWorkerRegistration = resolve;
+        rejectServiceWorkerRegistration = reject;
+      })
+    : Promise.reject(new Error('Service workers are not supported in this browser.'));
+
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .getRegistration()
+    .then((registration) => {
+      if (registration) {
+        resolveServiceWorkerRegistration?.(registration);
+      }
+    })
+    .catch(() => {
+      // Ignore lookup errors; registration attempts below will surface failures.
+    });
+
+  navigator.serviceWorker.ready
+    .then((registration) => {
+      resolveServiceWorkerRegistration?.(registration);
+    })
+    .catch(() => {
+      // ready() only rejects on unusual failures which will surface via registerSW.
+    });
+
+  registerSW({
+    immediate: true,
+    onRegistered(registration) {
+      if (registration) {
+        resolveServiceWorkerRegistration?.(registration);
+      }
+    },
+    onRegisterError(error) {
+      console.error('Service worker registration failed', error);
+      rejectServiceWorkerRegistration?.(error);
+    },
+  });
+} else {
+  registerSW({ immediate: true });
+}
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -17,12 +62,3 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>
 );
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swUrl = new URL('../sw.js', import.meta.url);
-    navigator.serviceWorker.register(swUrl, { type: 'module' }).catch((error) => {
-      console.error('Service worker registration failed', error);
-    });
-  });
-}
