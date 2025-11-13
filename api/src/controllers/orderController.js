@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import Meal from '../models/Meal.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
+import { isPushConfigured, sendPushNotificationToUser } from '../services/pushNotificationService.js';
 
 // placeOrder Function - Used by Beneficiary Users to place an order using the frontend interface.
 export async function placeOrder(req, res) {
@@ -57,6 +58,31 @@ export async function placeOrder(req, res) {
       beneficiaryBalance: beneficiary.tokenBalance,
       memberBalance: member.tokenBalance
     });
+
+    if (isPushConfigured()) {
+      const beneficiaryName = beneficiary.name || 'A beneficiary';
+      const mealTitle = meal.title || 'your meal';
+      const quantityDescription = qty === 1 ? '1 portion' : `${qty} portions`;
+      const orderId =
+        createdOrder && createdOrder._id && typeof createdOrder._id.toString === 'function'
+          ? createdOrder._id.toString()
+          : undefined;
+      const mealId = typeof meal._id?.toString === 'function' ? meal._id.toString() : undefined;
+      const notificationPayload = {
+        title: 'New meal order placed',
+        body: `${beneficiaryName} requested ${quantityDescription} of "${mealTitle}".`,
+        data: {
+          url: '/dashboard/member',
+          orderId,
+          mealId,
+          status: 'pending'
+        }
+      };
+
+      sendPushNotificationToUser(member._id, notificationPayload, { urgency: 'high' }).catch((error) => {
+        console.error('Failed to send order notification to member.', error);
+      });
+    }
   } catch (err) {
     throw err;
   }

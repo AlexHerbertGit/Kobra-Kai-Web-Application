@@ -1,16 +1,7 @@
 import { validationResult } from 'express-validator';
-import webPush from 'web-push';
 import PushSubscription from '../models/PushSubscription.js';
 
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
-
-if (vapidPublicKey && vapidPrivateKey) {
-  webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-} else {
-  console.warn('web-push VAPID keys are not fully configured. Notification delivery disabled.');
-}
+import { isPushConfigured, sendPushNotificationToUser } from '../services/pushNotificationService.js';
 
 function normalizeExpiration(expirationTime) {
   if (expirationTime === null || expirationTime === undefined) {
@@ -121,54 +112,25 @@ export async function sendTestNotification(req, res) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  if (!vapidPublicKey || !vapidPrivateKey) {
+  if (!isPushConfigured()) {
     return res.status(503).json({ message: 'Push notifications are not configured on the server.' });
   }
 
   const { title, message, url } = req.body;
-  const subscriptions = await PushSubscription.find({ user: userId });
-
-  if (subscriptions.length === 0) {
-    return res.status(404).json({ message: 'No subscriptions found for this user.' });
-  }
-
-  const payload = JSON.stringify({
+  const payload = {
     title: title || 'Kobra Kai',
     body: message || 'Push notifications are working!',
     data: {
-      url: url || undefined
-    }
-  });
+      
+  
+    url: url || undefined,
+    },
+  };
 
-  const results = [];
+  const { status, results } = await sendPushNotificationToUser(userId, payload);
 
-  for (const subscription of subscriptions) {
-    if (!subscription.keys?.auth || !subscription.keys?.p256dh) {
-      results.push({
-        endpoint: subscription.endpoint,
-        status: 'skipped',
-        message: 'Subscription keys are incomplete and were skipped.',
-      });
-      continue;
-    }
-    try {
-      await webPush.sendNotification({
-        endpoint: subscription.endpoint,
-        keys: {
-          auth: subscription.keys.auth,
-          p256dh: subscription.keys.p256dh
-        }
-      }, payload);
-      results.push({ endpoint: subscription.endpoint, status: 'sent' });
-    } catch (err) {
-      if (err.statusCode === 404 || err.statusCode === 410) {
-        await subscription.deleteOne();
-        results.push({ endpoint: subscription.endpoint, status: 'removed' });
-      } else {
-        results.push({ endpoint: subscription.endpoint, status: 'failed', message: err.message });
-      }
-    }
+  if (status === 'no_subscriptions') {
+    return res.status(404).json({ message: 'No subscriptions found for this user.' });
   }
-
   res.json({ results });
 }
