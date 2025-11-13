@@ -541,7 +541,8 @@ a {
   border-radius: 20px;
   padding: clamp(1.5rem, 4vw, 2rem);
   box-shadow: 0 10px 10px rgba(15, 23, 42, 0.18);
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1.25rem;
 }
 
@@ -600,7 +601,8 @@ a {
 }
 
 .dashboard-form {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
@@ -610,7 +612,8 @@ a {
 }
 
 .dashboard-form__group {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   max-width: 100%;
 }
@@ -742,23 +745,71 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 1.5rem;
+  padding: 1.25rem;
   border-radius: 14px;
   background: var(--clr-nav-link);
   box-shadow: 0 10px 18px rgba(15, 23, 42, 0.1);
+  flex-wrap: wrap;
 }
 
-.dashboard-orders__item-info h4 {
-  margin: 0 0 0.35rem;
+.dashboard-orders__item-info {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-orders__item-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dashboard-orders__item-header h4 {
+  margin: 0;
   font-size: 1.05rem;
+  color: var(--clr-nav-bg);
 }
 
-.dashboard-orders__item-info p {
+.dashboard-orders__status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+}
+
+.dashboard-orders__description {
   margin: 0;
   font-size: 0.9rem;
   color: var(--clr-text-muted);
-  padding-top: 0.5rem;
+}
+
+.dashboard-orders__details {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.dashboard-orders__details div {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.dashboard-orders__details dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--clr-text-muted);
+}
+
+.dashboard-orders__details dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--clr-nav-bg);
+  word-break: break-word;
 }
 
 .dashboard-meals {
@@ -774,10 +825,11 @@ a {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.25);
   background: rgba(249, 250, 251, 0.75);
+  margin: 1rem;
 }
 
 .dashboard-meals__item h3 {
@@ -789,6 +841,13 @@ a {
   color: var(--clr-text-muted);
 }
 
+.dashboard-meals__item--info {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 @media (max-width: 720px) {
   .dashboard-form--inline {
     grid-template-columns: 1fr;
@@ -796,6 +855,7 @@ a {
 
   .dashboard-orders__item {
     align-items: flex-start;
+    flex-direction: column;
   }
 }
 

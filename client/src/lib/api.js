@@ -45,5 +45,7 @@ export const api = {
   completeOrder: (id) => request(`/orders/${id}/completed`, { method:'POST' }),
 
   // notifications
-  savePushSubscription: (payload) => request('/notifications/subscriptions', { method: 'POST', body: payload })
+  savePushSubscription: (payload) => request('/push/subscribe', { method: 'POST', body: payload }),
+  deletePushSubscription: (payload) => request('/push/subscribe', { method: 'DELETE', body: payload }),
+  notifyPushSubscribers: (payload) => request('/push/notify', { method: 'POST', body: payload })
 };

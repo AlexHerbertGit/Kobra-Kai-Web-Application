@@ -47,8 +47,13 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await api.logout();
-    setNormalizedUser(null);
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error('Failed to logout', error);
+    } finally {
+      setNormalizedUser(null);
+    }
   };
 
   const updateProfile = async payload => {
@@ -59,8 +64,8 @@ export function AuthProvider({ children }) {
   };
 
    return (
-      <AuthCtx.Provider value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}>
-        {children}
-      </AuthCtx.Provider>
+    <AuthCtx.Provider value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}>
+      {children}
+    </AuthCtx.Provider>
   );
 }

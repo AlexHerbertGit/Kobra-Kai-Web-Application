@@ -167,7 +167,7 @@ export default function MemberDashboard() {
         <div className="dashboard-hero__content">
           <h1 className="dashboard-hero__title">Member Dashboard</h1>
           <p className="dashboard-hero__text">
-            Coordinate meal donations, keep your profile up to date, and manage orders from beneficiaries in one place.
+            Coordinate meal listings, keep your profile up to date, and manage orders from beneficiaries in one place.
           </p>
         </div>
       </header>
@@ -247,23 +247,50 @@ export default function MemberDashboard() {
                   <p className="dashboard-orders__empty">{section.empty}</p>
                 ) : (
                   <ul className="dashboard-orders__list">
-                    {section.orders.map(orderItem => (
-                      <li key={orderItem._id} className="dashboard-orders__item">
-                        <div className="dashboard-orders__item-info">
-                          <h4>{orderItem.mealId?.title ?? 'Meal'}</h4>
-                          <p>{statusLabels[orderItem.status] ?? orderItem.status}</p>
-                        </div>
-                        {section.onAction && (
-                          <button
-                            type="button"
-                            className="btn"
-                            onClick={() => section.onAction(orderItem._id)}
-                          >
-                            {section.actionLabel}
-                          </button>
-                        )}
-                      </li>
-                    ))}
+                    {section.orders.map(orderItem => {
+                      const beneficiary = orderItem.beneficiaryId;
+                      const beneficiaryName = beneficiary?.name?.trim() || 'Beneficiary details unavailable';
+                      const beneficiaryAddress = beneficiary?.address?.trim();
+                      const quantity = Number(orderItem.quantity ?? 0);
+                      const quantityLabel = Number.isFinite(quantity) && quantity > 0 ? quantity : '—';
+                      const costTokens = Number(orderItem.costTokens ?? 0);
+                      const costLabel = Number.isFinite(costTokens) && costTokens >= 0 ? costTokens : '—';
+
+                      return (
+                        <li key={orderItem._id} className="dashboard-orders__item">
+                          <div className="dashboard-orders__item-header">
+                            <div className="dashboard-orders__item-info">
+                              <h4>{orderItem.mealId?.title ?? 'Meal'}</h4>
+                              <p>{statusLabels[orderItem.status] ?? orderItem.status}</p>
+                            </div>
+                            {section.onAction && (
+                              <button
+                                type="button"
+                                className="btn"
+                                onClick={() => section.onAction(orderItem._id)}
+                              >
+                                {section.actionLabel}
+                              </button>
+                            )}
+                          </div>
+                          <div className="dashboard-orders__item-details">
+                            <div className="dashboard-orders__detail-block">
+                              <span className="dashboard-orders__detail-label">Beneficiary</span>
+                              <p className="dashboard-orders__detail-text">
+                                {beneficiaryName}
+                                {beneficiaryAddress ? ` · ${beneficiaryAddress}` : ''}
+                              </p>
+                            </div>
+                            <div className="dashboard-orders__detail-block">
+                              <span className="dashboard-orders__detail-label">Order Details</span>
+                              <p className="dashboard-orders__detail-text">
+                                Qty: {quantityLabel} · Tokens: {costLabel}
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -394,12 +421,12 @@ export default function MemberDashboard() {
           </p>
         </div>
         {memberMeals.length === 0 ? (
-          <p className="dashboard-orders__empty">You have not listed any meals yet.</p>
+          <p className="dashboard-meals__empty">You have not listed any meals yet.</p>
         ) : (
-          <ul className="dashboard-orders__list">
+          <ul className="dashboard-meals__list">
             {memberMeals.map(meal => (
-              <li key={meal._id} className="dashboard-orders__item">
-                <div className="dashboard-orders__item-info">
+              <li key={meal._id} className="dashboard-meals__item">
+                <div className="dashboard-meals__item">
                   <h4>{meal.title}</h4>
                   <p>{meal.description}</p>
                   <p>
@@ -421,6 +448,7 @@ export default function MemberDashboard() {
                   Delete
                 </button>
               </li>
+              
             ))}
           </ul>
         )}

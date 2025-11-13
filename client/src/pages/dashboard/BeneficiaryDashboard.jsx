@@ -5,18 +5,25 @@ import EnableNotifications from '../../components/EnableNotifications.jsx';
 
 export default function BeneficiaryDashboard() {
   const { user, updateProfile } = useAuth();
-  const [meals, setMeals] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [profile, setProfile] = useState({ name: '', address: '' });
   const [status, setStatus] = useState({ type: null, message: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.listMeals().then(setMeals);
-  }, []);
-
-  useEffect(() => {
-    api.listOrders().then(setOrders);
+    setOrdersLoading(true);
+    api
+      .listOrders()
+      .then(data => {
+        setOrders(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setOrders([]);
+      })
+      .finally(() => {
+        setOrdersLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -26,13 +33,16 @@ export default function BeneficiaryDashboard() {
   }, [user]);
 
   async function loadOrders() {
-    const data = await api.listOrders();
-    setOrders(data);
-  }
-
-  async function order(mealId) {
-    await api.placeOrder(mealId);
-    await loadOrders();
+    setOrdersLoading(true);
+    try {
+      const data = await api.listOrders();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setOrders([]);
+      throw error;
+    } finally {
+      setOrdersLoading(false);
+    }
   }
 
   async function markCompleted(orderId) {
@@ -74,19 +84,23 @@ export default function BeneficiaryDashboard() {
     {
       title: 'Pending',
       orders: pendingOrders,
-      empty: 'No pending orders. Explore meals to place a new order.'
+      empty: ordersLoading
+        ? 'Loading pending orders…'
+        : 'No pending orders. Explore meals to place a new order.',
     },
     {
       title: 'In Progress',
       orders: currentOrders,
-      empty: 'No current orders. Pending orders will appear here once accepted.',
+      empty: ordersLoading
+        ? 'Loading current orders…'
+        : 'No current orders. Pending orders will appear here once accepted.',
       actionLabel: 'Confirm Pickup',
       onAction: markCompleted
     },
     {
       title: 'Completed',
       orders: completedOrders,
-      empty: 'No completed orders yet.'
+      empty: ordersLoading ? 'Loading completed orders…' : 'No completed orders yet.'
     }
   ];
 
@@ -110,7 +124,7 @@ export default function BeneficiaryDashboard() {
             </p>
           </div>
 
-      <div className="dashboard-token">
+        <div className="dashboard-token">
             <h3 className="dashboard-token__label">Token Balance</h3>
             <p className="dashboard-token__value">{user?.tokenBalance ?? 0}</p>
             <EnableNotifications />
@@ -120,7 +134,7 @@ export default function BeneficiaryDashboard() {
             <strong>Email:</strong> {user?.email}
           </p>
       
-       <form className="dashboard-form" onSubmit={submitProfile}>
+        <form className="dashboard-form" onSubmit={submitProfile}>
             <label className="dashboard-form__label" htmlFor="profile-name">
               Name
             </label>
@@ -174,29 +188,74 @@ export default function BeneficiaryDashboard() {
               <div key={section.title} className="dashboard-orders__group">
                 <div className="dashboard-orders__group-header">
                   <h3>{section.title}</h3>
-                  <span className="dashboard-orders__count">{section.orders.length}</span>
+                  <span className="dashboard-orders__count">
+                    {ordersLoading ? '…' : section.orders.length}
+                  </span>
                 </div>
                 {section.orders.length === 0 ? (
                   <p className="dashboard-orders__empty">{section.empty}</p>
                 ) : (
                   <ul className="dashboard-orders__list">
-                    {section.orders.map(orderItem => (
-                      <li key={orderItem._id} className="dashboard-orders__item">
-                        <div className="dashboard-orders__item-info">
-                          <h4>{orderItem.mealId?.title ?? 'Meal'}</h4>
-                          <p>{statusLabels[orderItem.status] ?? orderItem.status}</p>
-                        </div>
-                        {section.onAction && (
-                          <button
-                            type="button"
-                            className="btn"
-                            onClick={() => section.onAction(orderItem._id)}
-                          >
-                            {section.actionLabel}
-                          </button>
-                        )}
-                      </li>
-                    ))}
+                     {section.orders.map((orderItem, index) => {
+                      const meal =
+                        orderItem?.mealId && typeof orderItem.mealId === 'object' ? orderItem.mealId : {};
+                      const providerSource =
+                        (orderItem?.memberId && typeof orderItem.memberId === 'object'
+                          ? orderItem.memberId
+                          : null) ||
+                        (meal?.memberId && typeof meal.memberId === 'object' ? meal.memberId : null);
+                      const providerName = providerSource?.name ?? 'Meal provider';
+                      const providerAddress = providerSource?.address ?? '';
+                      const quantity = Number.isFinite(orderItem?.quantity) ? orderItem.quantity : null;
+                      const totalTokens = Number.isFinite(orderItem?.costTokens)
+                        ? orderItem.costTokens
+                        : meal?.tokenValue && quantity
+                        ? meal.tokenValue * quantity
+                        : null;
+                      const statusText = statusLabels[orderItem?.status] ?? orderItem?.status ?? 'Status unknown';
+
+                      const orderKey = orderItem?._id ?? orderItem?.id ?? meal?._id ?? `order-${index}`;
+
+                      return (
+                        <li key={orderKey} className="dashboard-orders__item">
+                          <div className="dashboard-orders__item-info">
+                            <div className="dashboard-orders__item-header">
+                              <h4>{meal?.title ?? 'Meal'}</h4>
+                              <span className="dashboard-orders__status">{statusText}</span>
+                            </div>
+                            {meal?.description && (
+                              <p className="dashboard-orders__description">{meal.description}</p>
+                            )}
+                            <dl className="dashboard-orders__details">
+                              <div>
+                                <dt>Meal provider</dt>
+                                <dd>
+                                  {providerName}
+                                  {providerAddress ? ` • ${providerAddress}` : ''}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>Quantity</dt>
+                                <dd>{quantity ?? '—'}</dd>
+                              </div>
+                              <div>
+                                <dt>Total tokens</dt>
+                                <dd>{totalTokens ?? '—'}</dd>
+                              </div>
+                            </dl>
+                          </div>
+                          {section.onAction && (
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={() => section.onAction(orderItem._id)}
+                            >
+                              {section.actionLabel}
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>

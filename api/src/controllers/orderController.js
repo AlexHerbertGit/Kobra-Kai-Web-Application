@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';
 import Meal from '../models/Meal.js';
 import Order from '../models/Order.js';
@@ -16,52 +15,50 @@ export async function placeOrder(req, res) {
     return res.status(400).json({ message: 'Quantity must be a positive integer' });
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // Variable set for creating payload request body
+  let createdOrder;
   try {
-    const meal = await Meal.findById(mealId).session(session);
+    const meal = await Meal.findById(mealId);
     if (!meal) throw Object.assign(new Error('Meal not found'), { statusCode: 404 });
     if (meal.qtyAvailable < qty) throw Object.assign(new Error('Meal out of stock'), { statusCode: 400 });
 
-    const beneficiary = await User.findById(req.user.id).session(session);
+    const beneficiary = await User.findById(req.user.id);
     if (!beneficiary) throw Object.assign(new Error('User not found'), { statusCode: 404 });
     if (beneficiary.role !== 'beneficiary') throw Object.assign(new Error('Only beneficiaries can place orders'), { statusCode: 403 });
     const tokenValue = Number.isFinite(meal.tokenValue) ? Number(meal.tokenValue) : 1;
     const totalCost = tokenValue * qty;
     if (beneficiary.tokenBalance < totalCost) throw Object.assign(new Error('Insufficient tokens'), { statusCode: 400 });
 
-    const member = await User.findById(meal.memberId).session(session);
+    const member = await User.findById(meal.memberId);
     if (!member) throw Object.assign(new Error('Meal provider not found'), { statusCode: 404 });
 
     // decrement stock and tokens atomically
     meal.qtyAvailable -= qty;
     beneficiary.tokenBalance -= totalCost;
     member.tokenBalance = (member.tokenBalance ?? 0) + totalCost;
-    await meal.save({ session });
-    await beneficiary.save({ session });
-    await member.save({ session });
+    await meal.save();
+    await beneficiary.save();
+    await member.save();
 
-    const order = await Order.create([{
+    // Order payload
+    const order = await Order.create({
       mealId: meal._id,
       beneficiaryId: beneficiary._id,
       memberId: meal.memberId,
       status: 'pending',
       quantity: qty,
       costTokens: totalCost
-    }], { session });
+    });
 
-    await session.commitTransaction();
-    const createdOrder = order[0]?.toObject ? order[0].toObject() : order[0];
+    //Commit order to db
+    createdOrder = order?.toObject ? order.toObject() : order;
     res.status(201).json({
       order: createdOrder,
       beneficiaryBalance: beneficiary.tokenBalance,
       memberBalance: member.tokenBalance
     });
   } catch (err) {
-    await session.abortTransaction();
     throw err;
-  } finally {
-    session.endSession();
   }
 }
 
@@ -114,7 +111,15 @@ export async function listOrders(req, res) {
   if (req.user.role === 'member') filter.memberId = req.user.id;
 
   const orders = await Order.find(filter)
-    .populate('mealId')
+    .populate({
+      path: 'mealId',
+      populate: {
+        path: 'memberId',
+        select: 'name address'
+      }
+    })
+    .populate({ path: 'memberId', select: 'name address' })
+    .populate({ path: 'beneficiaryId', select: 'name address' })
     .sort({ createdAt: -1 })
     .lean();
 

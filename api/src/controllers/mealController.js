@@ -50,6 +50,10 @@ export async function createMeal(req, res) {
 
 // updateMeal Function - Used by Member users to update meal details, saves updated changes in the DB. 
 export async function updateMeal(req, res) {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
   const { id } = req.params;
   const meal = await Meal.findById(id);
   if (!meal) return res.status(404).json({ message: 'Meal not found' });

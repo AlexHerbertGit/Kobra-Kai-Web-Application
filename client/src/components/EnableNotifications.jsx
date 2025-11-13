@@ -15,7 +15,10 @@ export default function EnableNotifications({ className }) {
         setStatus('idle');
         return;
       }
-      await api.savePushSubscription(subscription);
+      const savedSubscription = await api.savePushSubscription(subscription);
+      if (!savedSubscription?.endpoint) {
+        throw new Error('Push subscription response was missing an endpoint.');
+      }
       setStatus('success');
     } catch (err) {
       setError(err?.message ?? 'Unable to enable notifications.');
