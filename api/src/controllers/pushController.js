@@ -16,23 +16,45 @@ export async function subscribe(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { endpoint, keys, expirationTime, device } = req.body;
-  const sanitizedDevice = typeof device === 'string' ? device.trim() : null;
-  const expiresAt = expirationTime === null || expirationTime === undefined
-    ? null
-    : new Date(expirationTime);
+  const { endpoint, keys, expirationTime, device } = req.body ?? {};
+
+  if (!endpoint || typeof endpoint !== 'string') {
+    return res.status(400).json({ message: 'A valid subscription endpoint is required.' });
+  }
+
+  if (!keys || typeof keys !== 'object') {
+    return res.status(400).json({ message: 'Push subscription keys are required.' });
+  }
+
+  const sanitizedKeys = {
+    p256dh: typeof keys.p256dh === 'string' ? keys.p256dh.trim() : '',
+    auth: typeof keys.auth === 'string' ? keys.auth.trim() : ''
+  };
+
+  if (!sanitizedKeys.p256dh || !sanitizedKeys.auth) {
+    return res.status(400).json({ message: 'Push subscription keys are invalid.' });
+  }
+
+  const sanitizedDevice = typeof device === 'string' && device.trim().length > 0
+    ? device.trim()
+    : null;
+
+  let expiresAt = null;
+  if (expirationTime !== null && expirationTime !== undefined) {
+    const expirationDate = new Date(Number(expirationTime));
+    if (!Number.isNaN(expirationDate.getTime())) {
+       expiresAt = expirationTime == null ? null : new Date(Number(expirationTime));
+    }
+  }
 
   const subscription = await PushSubscription.findOneAndUpdate(
-    { user: req.user.id, endpoint },
+    { user: req.user.id, endpoint: endpoint.trim() },
     {
       $set: {
         user: req.user.id,
-        endpoint,
-        keys: {
-          p256dh: keys.p256dh,
-          auth: keys.auth
-        },
-        device: sanitizedDevice || null,
+        endpoint: endpoint.trim(),
+        keys: sanitizedKeys,
+        device: sanitizedDevice,
         userAgent: req.headers['user-agent'] || null,
         expiresAt
       }
@@ -40,7 +62,12 @@ export async function subscribe(req, res) {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  res.status(201).json({ id: subscription._id, endpoint: subscription.endpoint });
+  res.status(201).json({
+    id: subscription._id.toString(),
+    endpoint: subscription.endpoint,
+    device: subscription.device,
+    expiresAt: subscription.expiresAt
+  });
 }
 
 export async function unsubscribe(req, res) {
