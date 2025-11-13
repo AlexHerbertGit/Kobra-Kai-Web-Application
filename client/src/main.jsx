@@ -53,7 +53,21 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   registerSW({ immediate: true });
 }
 
-createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root');
+const ROOT_KEY = '__kobraKaiRoot__';
+
+if (!rootElement) {
+  throw new Error('Root element not found.');
+}
+
+let root = window[ROOT_KEY];
+
+if (!root) {
+  root = createRoot(rootElement);
+  window[ROOT_KEY] = root;
+}
+
+root.render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
