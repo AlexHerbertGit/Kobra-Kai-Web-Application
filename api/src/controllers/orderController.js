@@ -2,7 +2,14 @@ import { validationResult } from 'express-validator';
 import Meal from '../models/Meal.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
-import { isPushConfigured, sendPushNotificationToUser } from '../services/pushNotificationService.js';
+import * as pushNotificationService from '../services/pushNotificationService.js';
+
+let pushService = pushNotificationService;
+
+export function __setPushNotificationService(service) {
+  pushService = service ?? pushNotificationService;
+}
+
 
 // placeOrder Function - Used by Beneficiary Users to place an order using the frontend interface.
 export async function placeOrder(req, res) {
@@ -59,7 +66,7 @@ export async function placeOrder(req, res) {
       memberBalance: member.tokenBalance
     });
 
-    if (isPushConfigured()) {
+    if (pushService?.isPushConfigured?.()) {
       const beneficiaryName = beneficiary.name || 'A beneficiary';
       const mealTitle = meal.title || 'your meal';
       const quantityDescription = qty === 1 ? '1 portion' : `${qty} portions`;
@@ -79,9 +86,11 @@ export async function placeOrder(req, res) {
         }
       };
 
-      sendPushNotificationToUser(member._id, notificationPayload, { urgency: 'high' }).catch((error) => {
-        console.error('Failed to send order notification to member.', error);
-      });
+      pushService
+        .sendPushNotificationToUser(member._id, notificationPayload, { urgency: 'high' })
+        .catch((error) => {
+          console.error('Failed to send order notification to member.', error);
+        });
     }
   } catch (err) {
     throw err;
@@ -102,8 +111,51 @@ export async function moveOrderToCurrent(req, res) {
     return res.status(400).json({ message: 'Only pending orders can be moved to current' });
   }
 
+  await order.populate([
+    { path: 'mealId', select: 'title memberId' },
+    { path: 'beneficiaryId', select: 'name' }
+  ]);
+
   order.status = 'current';
   await order.save();
+
+  if (pushService?.isPushConfigured?.()) {
+    const beneficiaryId =
+      typeof order.beneficiaryId?.toString === 'function'
+        ? order.beneficiaryId.toString()
+        : typeof order.beneficiaryId?._id?.toString === 'function'
+          ? order.beneficiaryId._id.toString()
+          : order.beneficiaryId;
+
+    const orderId = typeof order._id?.toString === 'function' ? order._id.toString() : undefined;
+    const mealId =
+      typeof order.mealId?._id?.toString === 'function'
+        ? order.mealId._id.toString()
+        : typeof order.mealId?.toString === 'function'
+          ? order.mealId.toString()
+          : undefined;
+
+    const beneficiaryName = order.beneficiaryId?.name || 'A beneficiary';
+    const mealTitle = order.mealId?.title || 'your meal';
+
+    const notificationPayload = {
+      title: 'Order accepted',
+      body: `${beneficiaryName}'s order for "${mealTitle}" is now being prepared.`,
+      data: {
+        url: orderId ? `/orders/${orderId}` : '/orders',
+        orderId,
+        mealId,
+        status: 'current'
+      }
+    };
+
+    pushService
+      .sendPushNotificationToUser(beneficiaryId, notificationPayload, { urgency: 'high' })
+      .catch((error) => {
+        console.error('Failed to send order notification to beneficiary.', error);
+      });
+  }
+
   res.json(order);
 }
 
