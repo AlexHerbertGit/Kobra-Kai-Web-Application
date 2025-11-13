@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api.js';
 import EnableNotifications from '../../components/EnableNotifications.jsx';
-import { useAuth } from '../../state/AuthContext.jsx';
+import { useAuth } from '../../state/useAuth.js';
 
 const DIETARY_TAG_OPTIONS = [
   'Vegetarian',

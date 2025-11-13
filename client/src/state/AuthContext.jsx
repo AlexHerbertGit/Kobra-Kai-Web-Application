@@ -1,10 +1,9 @@
 // AuthContext - Authentication helper
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { AuthContext } from './AuthContext.js';
 import { api } from '../lib/api.js';
 
-const AuthCtx = createContext(null);
-export const useAuth = () => useContext(AuthCtx);
 
 function normalizeUser(user) {
   if (!user) return null;
@@ -30,7 +29,7 @@ export function AuthProvider({ children }) {
       .then(u => setNormalizedUser(u))
       .catch(() => setNormalizedUser(null))
       .finally(() => setReady(true));
-    }, []);
+  }, []);
 
   const login = async (email, password) => {
     const u = await api.login(email, password);
@@ -64,8 +63,8 @@ export function AuthProvider({ children }) {
   };
 
    return (
-    <AuthCtx.Provider value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, setUser: setNormalizedUser, ready, login, register, logout, updateProfile }}>
       {children}
-    </AuthCtx.Provider>
+    </AuthContext.Provider>
   );
 }

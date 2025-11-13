@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api.js';
-import { useAuth } from '../state/AuthContext.jsx';
+import { useAuth } from '../state/useAuth.js';
 
 export default function Meals() {
   const [meals, setMeals] = useState([]);

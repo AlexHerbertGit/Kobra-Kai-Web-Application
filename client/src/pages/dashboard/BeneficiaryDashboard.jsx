@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../../state/AuthContext.jsx';
+import { useAuth } from '../../state/useAuth.js';
 import { api } from '../../lib/api.js';
 import EnableNotifications from '../../components/EnableNotifications.jsx';
 

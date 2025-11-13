@@ -60,7 +60,6 @@ async function waitForServiceWorkerRegistration({
     return immediateRegistration;
   }
 
-
   const registrationCandidates = [];
 
   if (
@@ -89,7 +88,6 @@ async function waitForServiceWorkerRegistration({
       }
     }
   }
-
   while (remainingTimeout() > 0) {
     const registration = await navigator.serviceWorker.getRegistration();
     if (registration) {

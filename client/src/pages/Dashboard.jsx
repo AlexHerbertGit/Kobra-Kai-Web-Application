@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAuth } from '../state/AuthContext.jsx';
+import { useAuth } from '../state/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
