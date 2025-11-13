@@ -28,7 +28,7 @@ export default function Contact() {
                 <address>
                   123 Sensei Way
                   <br />
-                  Resilience City
+                  Nelson, 7010
                 </address>
               </dd>
             </div>

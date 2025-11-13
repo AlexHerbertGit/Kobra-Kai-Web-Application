@@ -72,7 +72,9 @@ export async function sendTestNotification(req, res) {
   const payload = JSON.stringify({
     title: title || 'Kobra Kai',
     body: message || 'Push notifications are working!',
-    url: url || undefined
+    data: {
+      url: url || undefined
+    }
   });
 
   const results = [];

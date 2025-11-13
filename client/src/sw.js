@@ -1,3 +1,13 @@
+// Service Worker for PWA and Push Notifications 
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('push', (event) => {
   const defaultData = {
     title: 'Kobra Kai Charity',
@@ -16,11 +26,13 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const payloadData = payload.data ?? (payload.url ? { url: payload.url } : {});
+
   const notificationOptions = {
     body: payload.body ?? defaultData.body,
     icon: payload.icon ?? defaultData.icon,
     badge: payload.badge ?? defaultData.badge,
-    data: { ...defaultData.data, ...(payload.data ?? {}) },
+    data: { ...defaultData.data, ...payloadData },
     actions: payload.actions,
   };
 
