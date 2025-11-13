@@ -45,7 +45,7 @@ a {
 
 .main-content {
   flex: 1 1 auto;
-  padding: 2rem 1rem 3rem;
+  
 }
 
 .container { 
@@ -1469,5 +1469,124 @@ a {
 
   .about-page__hero {
     padding: clamp(1.5rem, 6vw, 2rem);
+  }
+}
+
+/* CONTACT PAGE */
+.contact-page {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+  display: grid;
+  gap: 2.5rem;
+}
+
+.contact-page__intro {
+  text-align: center;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.contact-page__eyebrow {
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clr-text-muted);
+  margin: 0;
+}
+
+.contact-page__intro h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  margin: 0;
+}
+
+.contact-page__intro p {
+  margin: 0;
+  color: var(--clr-text-muted);
+  line-height: 1.7;
+}
+
+.contact-page__grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.contact-page__details,
+.contact-page__cta {
+  background: var(--clr-surface);
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.15);
+  padding: 2rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.contact-page__details h2,
+.contact-page__cta h2 {
+  margin: 0;
+}
+
+.contact-page__list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-page__list div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.contact-page__list dt {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  color: var(--clr-text-muted);
+}
+
+.contact-page__list dd {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.contact-page__list a {
+  color: var(--clr-primary-hover);
+  font-weight: 600;
+}
+
+.contact-page__list address {
+  font-style: normal;
+  line-height: 1.6;
+}
+
+.contact-page__highlights {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--clr-text-muted);
+  line-height: 1.6;
+}
+
+.contact-page__btn {
+  justify-self: start;
+}
+
+@media (min-width: 768px) {
+  .contact-page__grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 600px) {
+  .contact-page {
+    padding: 2.5rem 1rem 3rem;
+  }
+
+  .contact-page__details,
+  .contact-page__cta {
+    padding: 1.75rem;
   }
 }
