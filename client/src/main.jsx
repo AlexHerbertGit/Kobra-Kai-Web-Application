@@ -20,7 +20,7 @@ createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const swUrl = new URL('./sw.js', import.meta.url);
+    const swUrl = new URL('../sw.js', import.meta.url);
     navigator.serviceWorker.register(swUrl, { type: 'module' }).catch((error) => {
       console.error('Service worker registration failed', error);
     });

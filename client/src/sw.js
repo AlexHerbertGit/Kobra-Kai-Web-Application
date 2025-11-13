@@ -46,7 +46,7 @@ self.addEventListener('notificationclick', (event) => {
   const targetUrl = event.notification?.data?.url ?? '/';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {
         if ('focus' in client) {
           const normalizedClientUrl = new URL(client.url);
@@ -56,8 +56,8 @@ self.addEventListener('notificationclick', (event) => {
           }
         }
       }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
       }
       return undefined;
     }),
