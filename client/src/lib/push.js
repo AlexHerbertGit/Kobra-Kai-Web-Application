@@ -8,14 +8,39 @@ class TimeoutError extends Error {
   }
 }
 
+function sanitizeVapidKey(rawKey) {
+  if (typeof rawKey !== 'string') {
+    return '';
+  }
+
+  return rawKey.trim().replace(/^['"]+|['"]+$/g, '');
+}
+
+function isLikelyBase64UrlString(value) {
+  return typeof value === 'string' && /^[A-Za-z0-9_-]+$/.test(value);
+}
+
 function urlBase64ToUint8Array(base64String) {
+  if (!isLikelyBase64UrlString(base64String)) {
+    throw new Error('VAPID public key is not a valid Base64URL string.');
+  }
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = atob(base64);
+  let rawData;
+  try {
+    rawData = atob(base64);
+  } catch (error) {
+    console.error('Failed to decode the VAPID public key.', error);
+    throw new Error('VAPID public key could not be decoded.');
+  }
   const outputArray = new Uint8Array(rawData.length);
 
   for (let i = 0; i < rawData.length; i += 1) {
     outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  if (outputArray.length !== 65) {
+    throw new Error('VAPID public key has an unexpected length.');
   }
 
   return outputArray;
@@ -179,7 +204,7 @@ async function fetchVapidKeyFromApi() {
     }
 
     const data = await response.json();
-    const key = typeof data?.key === 'string' ? data.key.trim() : '';
+    const key = sanitizeVapidKey(data?.key);
     if (!key) {
       throw new Error('Response did not include a VAPID public key.');
     }
@@ -196,9 +221,7 @@ async function getVapidPublicKey() {
     return cachedVapidKey;
   }
 
-  const envKey = typeof import.meta.env.VITE_VAPID_PUBLIC_KEY === 'string'
-    ? import.meta.env.VITE_VAPID_PUBLIC_KEY.trim()
-    : '';
+  const envKey = sanitizeVapidKey(import.meta.env.VITE_VAPID_PUBLIC_KEY);
 
   if (envKey) {
     cachedVapidKey = envKey;
@@ -271,10 +294,35 @@ export async function subscribeToPush() {
   }
 
   const vapidKey = await getVapidPublicKey();
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidKey),
-  });
+  let applicationServerKey;
+
+  try {
+    applicationServerKey = urlBase64ToUint8Array(vapidKey);
+  } catch (error) {
+    console.error('VAPID public key is invalid.', error);
+    throw new Error(
+      'Push notifications are misconfigured. Verify that the VAPID public key is a valid Base64URL string copied exactly as provided by web-push.'
+    );
+  }
+
+  try {
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey,
+    });
 
   return subscription.toJSON();
+  } catch (error) {
+    console.error('Push subscription request failed.', error);
+
+    if (error?.name === 'NotAllowedError') {
+      throw new Error('The browser blocked the push subscription request.');
+    }
+
+    if (error?.name === 'InvalidAccessError') {
+      throw new Error('Push subscription failed because the VAPID public key is not accepted by this browser.');
+    }
+
+    throw new Error('Failed to create the push subscription.');
+  }
 }
