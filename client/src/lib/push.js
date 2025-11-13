@@ -13,34 +13,35 @@ function sanitizeVapidKey(rawKey) {
     return '';
   }
 
-  return rawKey.trim().replace(/^['"]+|['"]+$/g, '');
+  const trimmed = rawKey.trim().replace(/^['"]+|['"]+$/g, '');
+  return trimmed.replace(/\s+/g, '');
 }
 
-function isLikelyBase64UrlString(value) {
-  return typeof value === 'string' && /^[A-Za-z0-9_-]+$/.test(value);
-}
 
 function urlBase64ToUint8Array(base64String) {
-  if (!isLikelyBase64UrlString(base64String)) {
-    throw new Error('VAPID public key is not a valid Base64URL string.');
+  if (typeof base64String !== 'string' || base64String.length === 0) {
+    throw new Error('VAPID public key is empty or not a string.');
   }
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+
+  const normalized = base64String.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+
   let rawData;
   try {
-    rawData = atob(base64);
+    rawData = atob(normalized + padding);
   } catch (error) {
     console.error('Failed to decode the VAPID public key.', error);
     throw new Error('VAPID public key could not be decoded.');
   }
+
   const outputArray = new Uint8Array(rawData.length);
 
   for (let i = 0; i < rawData.length; i += 1) {
     outputArray[i] = rawData.charCodeAt(i);
   }
 
-  if (outputArray.length !== 65) {
-    throw new Error('VAPID public key has an unexpected length.');
+  if (outputArray.length !== 65 || outputArray[0] !== 0x04) {
+    throw new Error('VAPID public key is not the expected 65-byte uncompressed public key.');
   }
 
   return outputArray;

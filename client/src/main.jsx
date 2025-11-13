@@ -31,6 +31,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         // Ignore controller change failures; registration attempts below will surface issues.
       });
   });
+  
   navigator.serviceWorker
     .getRegistration()
     .then((registration) => {
