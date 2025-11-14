@@ -21,6 +21,7 @@ function normalizeExpiration(expirationTime) {
   return Number.isNaN(expirationDate.getTime()) ? null : expirationDate;
 }
 
+// Subscribe Function - Subscribes the user to push notifications
 export async function subscribe(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -84,6 +85,7 @@ export async function subscribe(req, res) {
   }
 }
 
+// Unsubscribe Function - Removes the users push notification record from the database
 export async function unsubscribe(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -103,6 +105,7 @@ export async function unsubscribe(req, res) {
   return res.status(204).end();
 }
 
+// testing function
 export async function sendTestNotification(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
